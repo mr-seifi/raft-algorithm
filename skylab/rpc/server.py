@@ -1,7 +1,7 @@
 import grpc
 from concurrent import futures
 from .config import consensus_pb2, consensus_pb2_grpc
-from skylab.configuration.consensus import Consensus as ConsensusService
+from skylab.consensus.consensus import Consensus as ConsensusService
 
 
 class Consensus(consensus_pb2_grpc.ConsensusServicer):
