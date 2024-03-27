@@ -4,7 +4,7 @@ from skylab.app.config import Config
 from concurrent.futures import ThreadPoolExecutor, TimeoutError, as_completed
 
 
-class Communicator:
+class Client:
     def __init__(self):
         self.base_url = f"{Config.grpc_server_host()}:{Config.grpc_server_port()}"
         self.trusted_nodes = Config.trusted_nodes()

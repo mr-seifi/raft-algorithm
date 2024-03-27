@@ -1,3 +1,3 @@
 from .compiler import compile_proto
 from .server import serve
-from .communicator import Communicator
+from .client import Client

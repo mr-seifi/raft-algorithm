@@ -1,10 +1,6 @@
-import signal
 import time
-from random import randint
-
-from skylab.consensus.state import FollowerState, CandidateState, LeaderState, Role
+from skylab.consensus.state import FollowerState, CandidateState, LeaderState
 from skylab.app.config import Config
-from skylab.rpc.communicator import Communicator
 
 
 class Consensus:
@@ -14,13 +10,14 @@ class Consensus:
     def __init__(self, current_term=0, voted_for=None, log=[],
                  commit_index=0, last_applied=0, current_leader=None,
                  next_index=[], match_index=[]):
+        # TODO: Write state read, write function
+        # TODO: Persist Storage
         self.id = Config.node_id()
         self.current_term = current_term
         self.voted_for = voted_for
         self.log = log
         self.commit_index = commit_index
         self.last_applied = last_applied
-        # self.current_role = Role.FOLLOWER
         self.current_leader = current_leader
 
         # Initialized to leader
@@ -28,9 +25,8 @@ class Consensus:
         self.match_index = match_index
 
         self.state = FollowerState(consensus_service=self)
-        self.set_timeout()
+        self.state.run()
 
-    # NEW METHODS
     def set_timer(self):
         self.state.set_timer()
 
@@ -51,32 +47,15 @@ class Consensus:
         return self.state.reply_vote_request(term=term, candidate_id=candidate_id, last_log_index=last_log_index,
                                              last_log_term=last_log_term)
 
+    def exec_last_log_command(self):
+        return self.state.exec_last_log_command()
+
+    def request(self, log):
+        return self.state.handle_request(log=log)
+
     def run(self):
         return self.state.run()
 
     def start(self):
         while True:
             time.sleep(10)
-
-    # ###
-
-    # TODO: Write state read, write function
-    # General
-    def exec_log_command(self):
-        if self.state.commit_index > self.state.last_applied:
-            self.state.last_applied += 1
-            # TODO: Write run command
-            self.state.log[self.state.last_applied - 1].run()
-
-    def request(self, log):
-        if self.state.current_role == Role.FOLLOWER:
-            # TODO: Send it to leader
-            ...
-        elif self.state.current_role == Role.LEADER:
-            self.state.log.append(
-                log
-            )
-            self.state.last_applied += 1
-
-        return # RESPONSE
-

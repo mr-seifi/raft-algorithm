@@ -1,6 +1,6 @@
 import argparse
 from skylab.app import Config
-from skylab.rpc import compile_proto, serve, Communicator
+from skylab.rpc import compile_proto, serve
 import os
 import logging
 
