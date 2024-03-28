@@ -51,3 +51,19 @@ class Config:
     @classmethod
     def request_vote_timeout(cls) -> int:
         return int(cls._loaded.get("REQUEST_VOTE_TIMEOUT"))
+
+    @classmethod
+    def redis_host(cls) -> str:
+        return cls._loaded.get("REDIS_HOST")
+
+    @classmethod
+    def redis_port(cls) -> str:
+        return cls._loaded.get("REDIS_PORT")
+
+    @classmethod
+    def redis_append_entries_queue(cls) -> str:
+        return cls._loaded.get("REDIS_APPEND_ENTRIES_QUEUE")
+
+    @classmethod
+    def redis_request_vote_queue(cls) -> str:
+        return cls._loaded.get("REDIS_REQUEST_VOTE_QUEUE")

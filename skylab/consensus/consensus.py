@@ -1,6 +1,6 @@
 import time
-from skylab.consensus.state import FollowerState, CandidateState, LeaderState
 from skylab.app.config import Config
+from skylab.broker.queue import RedisQueue
 
 
 class Consensus:
@@ -10,6 +10,8 @@ class Consensus:
     def __init__(self, current_term=0, voted_for=None, log=[],
                  commit_index=0, last_applied=0, current_leader=None,
                  next_index=[], match_index=[]):
+        from skylab.consensus.state import FollowerState
+
         # TODO: Write state read, write function
         # TODO: Persist Storage
         self.id = Config.node_id()
@@ -26,6 +28,12 @@ class Consensus:
 
         self.state = FollowerState(consensus_service=self)
         self.state.run()
+
+    def store(self):
+        ...
+
+    def load(self):
+        ...
 
     def set_timer(self):
         self.state.set_timer()
@@ -57,5 +65,24 @@ class Consensus:
         return self.state.run()
 
     def start(self):
+        self.load()
+        self.run()
+
+        redis_queue = RedisQueue()
         while True:
-            time.sleep(10)
+            try:
+                append_entry = redis_queue.get_append_entry()
+                if append_entry:
+                    ...
+
+                vote_request = redis_queue.get_append_entry()
+                if vote_request:
+                    ...
+
+            except Exception as e:
+                print(f'[Exception|Consensus]: {e}')
+                redis_queue = RedisQueue()
+
+
+
+            ...

@@ -1,0 +1,44 @@
+version: "3.8"
+
+services:
+  mongo:
+    image: mongo:latest
+    command: mongod --auth
+    restart: always
+    volumes:
+      - mongo-data:/data/db
+    env_file:
+      - ./.env
+
+  redis:
+    image: redis:7.2.4-alpine
+    restart: always
+    volumes:
+      - redis-data:/data/
+
+  skylab-consensus:
+    build: .
+    command: skylab
+    env_file:
+      - ./.env
+    depends_on:
+      - mongo
+      - redis
+    volumes:
+      - .:/app
+
+  skylab-server:
+    build: .
+    command: skylab --run-server
+    env_file:
+      - ./.env
+    depends_on:
+      - mongo
+      - redis
+    volumes:
+      - .:/app
+
+
+volumes:
+  mongo-data:
+  redis-data:

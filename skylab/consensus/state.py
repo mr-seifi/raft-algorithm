@@ -15,7 +15,7 @@ class State:
     def reset_timer(self):
         ...
 
-    def alarm_handler(self):
+    def alarm_handler(self, signum, frame):
         ...
 
     def reply_append_entries(self, term: int, leader_id: int, prev_log_index: int,
@@ -53,7 +53,7 @@ class FollowerState(State):
         signal.alarm(0)
         self.consensus_service.set_timer()
 
-    def alarm_handler(self):
+    def alarm_handler(self, signum, frame):
         self.consensus_service.state = CandidateState(consensus_service=self.consensus_service)
         return self.consensus_service.run()
 
@@ -68,7 +68,7 @@ class FollowerState(State):
             self.consensus_service.current_term = term
             self.consensus_service.current_leader = leader_id
             self.consensus_service.state = FollowerState(consensus_service=self.consensus_service)
-            return self.consensus_service.run()
+            # return self.consensus_service.run()
 
         # Follower Role
         if self.consensus_service.current_leader != leader_id:
@@ -138,7 +138,7 @@ class CandidateState(State):
         signal.alarm(0)
         self.consensus_service.set_timer()
 
-    def alarm_handler(self):
+    def alarm_handler(self, signum, frame):
         self.consensus_service.run()
 
     def reply_append_entries(self, term: int, leader_id: int, prev_log_index: int,
@@ -220,7 +220,7 @@ class LeaderState(State):
         signal.alarm(0)
         self.consensus_service.set_timer()
 
-    def alarm_handler(self):
+    def alarm_handler(self, signum, frame):
         self.consensus_service.run()
 
     def reply_append_entries(self, term: int, leader_id: int, prev_log_index: int,

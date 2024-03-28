@@ -7,6 +7,7 @@ from skylab.consensus.consensus import Consensus as ConsensusService
 class Consensus(consensus_pb2_grpc.ConsensusServicer):
     def AppendEntries(self, request, context):
         consensus_service = ConsensusService()
+        # print(request.entries)
         current_term, success = consensus_service.reply_append_entries(term=request.term,
                                                                        leader_id=request.leaderId,
                                                                        prev_log_index=request.prevLogIndex,
