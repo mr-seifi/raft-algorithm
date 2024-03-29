@@ -20,7 +20,8 @@ class Consensus(consensus_pb2_grpc.ConsensusServicer):
                                        'leader_id': request.leaderId,
                                        'prev_log_index': request.prevLogIndex,
                                        'prev_log_term': request.prevLogTerm,
-                                       'entries': request.entries,
+                                       'entries': [{'log_term': entry.logTerm, 'command': entry.command}
+                                                   for entry in request.entries],
                                        'leader_commit': request.leaderCommit})
         if not success:
             raise Exception('[Exception|AppendEntries]: Failed to produce by rpc')
