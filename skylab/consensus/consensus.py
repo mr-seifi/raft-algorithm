@@ -39,8 +39,8 @@ class Consensus:
     def set_timer(self):
         self.state.set_timer()
 
-    def alarm_handler(self):
-        self.state.alarm_handler()
+    def alarm_handler(self, signum, frame):
+        self.state.alarm_handler(signum, frame)
 
     def reset_timer(self):
         self.state.reset_timer()
