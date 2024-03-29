@@ -191,7 +191,7 @@ class CandidateState(State):
                                                                 candidate_id=self.consensus_service.id,
                                                                 last_log_index=self.consensus_service.last_applied,
                                                                 last_log_term=self.consensus_service.log[
-                                                                    -1].term if self.log else 0)
+                                                                    -1].term if self.consensus_service.log else 0)
 
         total_granted = len(list(filter(lambda resp: resp[1] is True, responses)))
         majority = len(Config.trusted_nodes()) // 2 + 1
