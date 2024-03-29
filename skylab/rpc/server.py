@@ -1,28 +1,67 @@
 import grpc
+import time
 from concurrent import futures
 from .config import consensus_pb2, consensus_pb2_grpc
-from skylab.consensus.consensus import Consensus as ConsensusService
+from skylab.broker.queue import PubSubQueue, produce_by_rpc
+from uuid import uuid4
 
 
 class Consensus(consensus_pb2_grpc.ConsensusServicer):
+    append_entries_messages = {}
+    request_vote_messages = {}
+
     def AppendEntries(self, request, context):
-        consensus_service = ConsensusService()
-        # print(request.entries)
-        current_term, success = consensus_service.reply_append_entries(term=request.term,
-                                                                       leader_id=request.leaderId,
-                                                                       prev_log_index=request.prevLogIndex,
-                                                                       prev_log_term=request.prevLogTerm,
-                                                                       entries=request.entries,
-                                                                       leader_commit=request.leaderCommit)
-        return consensus_pb2.AppendEntriesResponse(term=current_term, success=success)
+        pubsub_queue = PubSubQueue()
+        _random_id = uuid4().hex
+        success = produce_by_rpc(queue=pubsub_queue,
+                                 data_type='append_entries',
+                                 data={'_id': _random_id,
+                                       'term': request.term,
+                                       'leader_id': request.leaderId,
+                                       'prev_log_index': request.prevLogIndex,
+                                       'prev_log_term': request.prevLogTerm,
+                                       'entries': request.entries,
+                                       'leader_commit': request.leaderCommit})
+        if not success:
+            raise Exception('[Exception|AppendEntries]: Failed to produce by rpc')
+
+        response = {}
+        timeout = time.time() + 60
+        while True:
+            if Consensus.append_entries_messages.get(_random_id):
+                response = Consensus.append_entries_messages.pop(_random_id)
+                break
+            if time.time() > timeout:
+                break
+            time.sleep(0.01)
+
+        return consensus_pb2.AppendEntriesResponse(term=response.get('term'),
+                                                   success=response.get('success'))
 
     def RequestVote(self, request, context):
-        consensus_service = ConsensusService()
-        current_term, granted = consensus_service.reply_vote_request(term=request.term,
-                                                                     candidate_id=request.candidateId,
-                                                                     last_log_index=request.lastLogIndex,
-                                                                     last_log_term=request.lastLogTerm)
-        return consensus_pb2.RequestVoteResponse(term=current_term, granted=granted)
+        pubsub_queue = PubSubQueue()
+        _random_id = uuid4().hex
+        success = produce_by_rpc(queue=pubsub_queue,
+                                 data_type='reqeust_vote',
+                                 data={'_id': _random_id,
+                                       'term': request.term,
+                                       'candidate_id': request.candidateId,
+                                       'last_log_index': request.lastLogIndex,
+                                       'last_log_term': request.lastLogTerm})
+        if not success:
+            raise Exception('[Exception|RequestVote]: Failed to produce by rpc')
+
+        response = {}
+        timeout = time.time() + 60
+        while True:
+            if Consensus.request_vote_messages.get(_random_id):
+                response = Consensus.request_vote_messages.pop(_random_id)
+                break
+            if time.time() > timeout:
+                break
+            time.sleep(0.01)
+
+        return consensus_pb2.RequestVoteResponse(term=response.get('term'), granted=response.get('granted'))
 
 
 def serve(port: str, max_workers: int):

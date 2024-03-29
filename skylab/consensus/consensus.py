@@ -1,11 +1,13 @@
 import time
 from skylab.app.config import Config
-from skylab.broker.queue import RedisQueue
+from skylab.broker.queue import PubSubQueue, produce_by_consensus
+from queue import Queue
 
 
 class Consensus:
     TIMEOUT = -1
     HEARTBEAT = -1
+    Q = Queue()
 
     def __init__(self, current_term=0, voted_for=None, log=[],
                  commit_index=0, last_applied=0, current_leader=None,
@@ -27,7 +29,6 @@ class Consensus:
         self.match_index = match_index
 
         self.state = FollowerState(consensus_service=self)
-        self.state.run()
 
     def store(self):
         ...
@@ -68,21 +69,34 @@ class Consensus:
         self.load()
         self.run()
 
-        redis_queue = RedisQueue()
+        pubsub_queue = PubSubQueue()
         while True:
-            try:
-                append_entry = redis_queue.get_append_entry()
-                if append_entry:
-                    ...
+            item = Consensus.Q.get()
+            data_type = item['_data_type']
+            if data_type == 'append_entries':
+                term, success = self.reply_append_entries(
+                    term=item['term'],
+                    leader_id=item['leader_id'],
+                    prev_log_index=item['prev_log_index'],
+                    prev_log_term=item['prev_log_term'],
+                    entries=item['entries'],
+                    leader_commit=item['leader_commit']
+                )
+                success = produce_by_consensus(queue=pubsub_queue,
+                                               data_type=data_type,
+                                               data={'_id': item['_id'], 'term': term, 'success': success})
+                if not success:
+                    raise Exception('[Exception|start]: Failed to produce by consensus')
 
-                vote_request = redis_queue.get_append_entry()
-                if vote_request:
-                    ...
-
-            except Exception as e:
-                print(f'[Exception|Consensus]: {e}')
-                redis_queue = RedisQueue()
-
-
-
-            ...
+            elif data_type == 'request_vote':
+                term, granted = self.reply_vote_request(
+                    term=item['term'],
+                    candidate_id=item['candidate_id'],
+                    last_log_index=item['last_log_index'],
+                    last_log_term=item['last_log_term']
+                )
+                success = produce_by_consensus(queue=pubsub_queue,
+                                               data_type=data_type,
+                                               data={'_id': item['_id'], 'term': term, 'granted': granted})
+                if not success:
+                    raise Exception('[Exception|start]: Failed to produce by consensus')

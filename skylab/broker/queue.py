@@ -1,6 +1,7 @@
 import redis
 import threading
 from skylab.app.config import Config
+import json
 
 
 class PubSubQueue:
@@ -21,57 +22,58 @@ class PubSubQueue:
     def _listen(self, callback):
         for message in self.pubsub.listen():
             if message['type'] == 'message':
-                callback(message['data'])
+                data_type, data = _decode(message['data'].decode())
+                callback(data_type, data)
 
 
-def produce_by_rpc(queue, data):
-    for item in data:
-        queue.publish(channel_name='rpc_to_consensus', item=item)
-        print(f"Published {item} to the channel")
+def produce_by_rpc(queue: PubSubQueue, data_type: str, data: dict) -> bool:
+    try:
+        encoded_message = _encode(data_type, **data)
+        queue.publish(channel_name='rpc_to_consensus', item=encoded_message)
+        return True
+    except Exception as e:
+        print(f'[Exception|produce_by_rpc]: {e}')
+        return False
 
 
-def consume_by_consensus(queue, callback):
-    queue.subscribe(channel_name='rpc_to_consensus', callback=callback)
+def consume_by_consensus(queue: PubSubQueue):
+    queue.subscribe(channel_name='rpc_to_consensus', callback=_callback_rpc_to_consensus)
 
 
-# TODO: Encode Messages
+def produce_by_consensus(queue: PubSubQueue, data_type: str, data: dict):
+    try:
+        encoded_message = _encode(data_type, **data)
+        queue.publish(channel_name='consensus_to_rpc', item=encoded_message)
+        return True
+    except Exception as e:
+        print(f'[Exception|produce_by_rpc]: {e}')
+        return False
 
 
-def produce_by_consensus(queue, data):
-    for item in data:
-        queue.publish(channel_name='consensus_to_rpc', item=item)
-        print(f"Published {item} to the channel")
+def consume_by_rpc(queue: PubSubQueue):
+    queue.subscribe(channel_name='consensus_to_rpc', callback=_callback_consensus_to_rpc)
 
 
-def consume_by_rpc(queue, callback):
-    queue.subscribe(channel_name='consensus_to_rpc', callback=callback)
+def _encode(data_type: str, **kwargs) -> str:
+    kwargs['_data_type'] = data_type
+    return json.dumps(kwargs)
 
 
-class RedisQueue:
-    def __init__(self):
-        self.redis_conn = redis.Redis(host=Config.redis_host(),
-                                      port=Config.redis_port())
-        self.append_entries_queue = Config.redis_append_entries_queue()
-        self.request_vote_queue = Config.redis_request_vote_queue()
+def _decode(encoded_message: str) -> (str, dict):
+    message = json.loads(encoded_message)
+    data_type = message['_data_type']
+    return data_type, message
 
-    def put_append_entry(self, item):
-        self.redis_conn.rpush(self.append_entries_queue, item)
 
-    def get_append_entry(self, timeout=0):
-        return self.redis_conn.blpop([self.append_entries_queue], timeout=timeout)[1]
+def _callback_rpc_to_consensus(_: str, item: dict):
+    from skylab.consensus.consensus import Consensus
+    Consensus.Q.put(item)
 
-    def put_request_vote(self, item):
-        self.redis_conn.rpush(self.request_vote_queue, item)
 
-    def get_request_vote(self, timeout=0):
-        return self.redis_conn.blpop([self.request_vote_queue], timeout=timeout)[1]
-
-    def consume(self):
-        while True:
-            received_append_entry = self.get_append_entry()
-            if received_append_entry:
-                print(f"Processing {received_append_entry}")
-
-            received_vote_request = self.get_request_vote()
-            if received_vote_request:
-                print(f"Processing {received_vote_request}")
+def _callback_consensus_to_rpc(data_type: str, item: dict):
+    from skylab.rpc.server import Consensus
+    _id = item.pop('_id')
+    if data_type == 'append_entries':
+        Consensus.append_entries_messages[_id] = item
+    elif data_type == 'request_vote':
+        Consensus.request_vote_messages[_id] = item
