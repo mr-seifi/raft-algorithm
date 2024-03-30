@@ -89,7 +89,6 @@ class Consensus:
                     raise Exception('[Exception|start]: Failed to produce by consensus')
 
             elif data_type == 'request_vote':
-                print('X')
                 term, granted = self.reply_vote_request(
                     term=item['term'],
                     candidate_id=item['candidate_id'],
