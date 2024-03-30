@@ -1,6 +1,7 @@
-import time
 from skylab.app.config import Config
 from skylab.broker.queue import PubSubQueue, produce_by_consensus
+from skylab.storage.mongo import MongoService
+from skylab.consensus.log import decode_log
 from queue import Queue
 
 
@@ -31,10 +32,28 @@ class Consensus:
         self.state = FollowerState(consensus_service=self)
 
     def store(self):
-        ...
+        mongo_service = MongoService.obtain()
+        mongo_service.store_configuration(current_term=self.current_term, voted_for=self.voted_for,
+                                          commit_index=self.commit_index, last_applied=self.last_applied,
+                                          current_leader=self.current_leader, next_index=self.next_index,
+                                          match_index=self.match_index)
+        mongo_service.store_logs(logs=[log.encode() for log in self.log])
 
     def load(self):
-        ...
+        mongo_service = MongoService.obtain()
+        success, configuration, logs = mongo_service.load()
+        if not success:
+            return
+
+        self.current_term = configuration['current_term']
+        self.voted_for = configuration['voted_for']
+        self.commit_index = configuration['commit_index']
+        self.last_applied = configuration['last_applied']
+        self.current_leader = configuration['current_leader']
+        self.next_index = configuration['next_index']
+        self.match_index = configuration['match_index']
+        self.log = [decode_log(log) for log in logs]
+
 
     def set_timer(self):
         self.state.set_timer()
@@ -63,6 +82,7 @@ class Consensus:
         return self.state.handle_request(log=log)
 
     def run(self):
+        self.store()
         return self.state.run()
 
     def start(self):
@@ -70,6 +90,7 @@ class Consensus:
         self.run()
 
         pubsub_queue = PubSubQueue()
+        from skylab.consensus.state import FollowerState, CandidateState, LeaderState
         while True:
             item = Consensus.Q.get()
             data_type = item['_data_type']
@@ -87,6 +108,9 @@ class Consensus:
                                                data={'_id': item['_id'], 'term': term, 'success': success})
                 if not success:
                     raise Exception('[Exception|start]: Failed to produce by consensus')
+
+                if isinstance(self.state, CandidateState):
+                    self.state = FollowerState(consensus_service=self)
 
             elif data_type == 'request_vote':
                 term, granted = self.reply_vote_request(

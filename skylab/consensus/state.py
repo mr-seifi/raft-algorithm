@@ -2,6 +2,7 @@ import signal
 from random import randint
 from skylab.app.config import Config
 from skylab.consensus.consensus import Consensus
+from skylab.consensus.log import Log
 from skylab.rpc.client import Client
 
 
@@ -29,8 +30,7 @@ class State:
     def exec_last_log_command(self):
         if self.consensus_service.commit_index > self.consensus_service.last_applied:
             self.consensus_service.last_applied += 1
-            # TODO: Write run command
-            self.consensus_service.log[self.consensus_service.last_applied - 1].run()
+            self.consensus_service.log[self.consensus_service.last_applied - 1].exec()
 
     def handle_request(self, log):
         ...
@@ -84,7 +84,10 @@ class FollowerState(State):
         # TODO: Check not to be in logs
         # TODO: Check exec that should be last - 1 or last
         for entry in entries:
-            self.consensus_service.log.append(entry)
+            self.consensus_service.log.append(
+                Log(term=entry.logTerm,
+                    command=entry.command)
+            )
             self.exec_last_log_command()
             self.consensus_service.last_applied += 1
 
@@ -106,7 +109,8 @@ class FollowerState(State):
             return self.consensus_service.current_term, False
 
         if (self.consensus_service.voted_for is None or self.consensus_service.voted_for == candidate_id) and \
-                ((not self.consensus_service.log) or (last_log_term == self.consensus_service.log[-1].term and last_log_index == len(
+                ((not self.consensus_service.log) or (
+                        last_log_term == self.consensus_service.log[-1].term and last_log_index == len(
                     self.consensus_service.log) - 1)):
             return self.consensus_service.current_term, True
 
@@ -202,8 +206,6 @@ class CandidateState(State):
             self.consensus_service.current_leader = self.consensus_service.id
             return self.consensus_service.run()
 
-        # TODO: if appendEntries received --> FOLLOWER
-
 
 class LeaderState(State):
     def __init__(self, consensus_service: Consensus):
@@ -259,9 +261,10 @@ class LeaderState(State):
     def exec_last_log_command(self):
         super().exec_last_log_command()
 
-    def handle_request(self, log):
+    def handle_request(self, log: dict):
         self.consensus_service.log.append(
-            log
+            Log(term=log['term'],
+                command=log['command'])
         )
         self.exec_last_log_command()
         self.consensus_service.last_applied += 1

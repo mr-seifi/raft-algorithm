@@ -67,3 +67,11 @@ class Config:
     @classmethod
     def redis_request_vote_queue(cls) -> str:
         return cls._loaded.get("REDIS_REQUEST_VOTE_QUEUE")
+
+    @classmethod
+    def mongo_uri(cls) -> str:
+        return cls._loaded.get("MONGO_URI")
+
+    @classmethod
+    def mongo_database(cls) -> str:
+        return cls._loaded.get("MONGO_DATABASE")
