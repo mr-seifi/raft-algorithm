@@ -75,8 +75,7 @@ class FollowerState(State):
             return -1, False
 
         # TODO: Check the first condition
-        if len(self.consensus_service.log) - 1 < prev_log_index and \
-                self.consensus_service.log[prev_log_index].term != prev_log_term:
+        if len(self.consensus_service.log) - 1 < prev_log_index:
             return self.consensus_service.current_term, False
 
         if self.consensus_service.log[prev_log_index].term != prev_log_term:

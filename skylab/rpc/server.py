@@ -43,7 +43,7 @@ class Consensus(consensus_pb2_grpc.ConsensusServicer):
         pubsub_queue = PubSubQueue()
         _random_id = uuid4().hex
         success = produce_by_rpc(queue=pubsub_queue,
-                                 data_type='reqeust_vote',
+                                 data_type='request_vote',
                                  data={'_id': _random_id,
                                        'term': request.term,
                                        'candidate_id': request.candidateId,
