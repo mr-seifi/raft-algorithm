@@ -45,6 +45,9 @@ class MongoService:
                  'command': log['command']}
                 for log_index, log in enumerate(logs)]
 
+        if not logs[last_stored_log_index:]:
+            return True
+
         c = self.db['logs']
         r = c.insert_many(logs[last_stored_log_index:])
         if not r.acknowledged:
