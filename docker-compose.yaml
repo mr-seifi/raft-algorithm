@@ -3,7 +3,7 @@ version: "3.8"
 services:
   mongo:
     image: mongo:latest
-    command: mongod --auth
+    command: mongod --noauth
     restart: always
     volumes:
       - mongo-data:/data/db
@@ -11,7 +11,7 @@ services:
       - ./.env
 
   redis:
-    image: redis:7.2.4-alpine
+    image: redis:7.2.4
     restart: always
     volumes:
       - redis-data:/data/
