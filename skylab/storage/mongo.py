@@ -36,6 +36,8 @@ class MongoService:
         last_stored_log_index = _c.find_one({
             '_id': 2
         })
+        if not last_stored_log_index:
+            last_stored_log_index = {}
         last_stored_log_index = last_stored_log_index.get('last_index', 0)
 
         logs = [{'_id': last_stored_log_index + log_index + 1,
