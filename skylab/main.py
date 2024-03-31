@@ -32,7 +32,8 @@ def main():
         pubsub_queue = PubSubQueue()
         consumer_thread = threading.Thread(target=consume_by_rpc, args=(pubsub_queue, ))
         consumer_thread.start()
-        serve(port=str(Config.grpc_server_port()),
+        serve(host=Config.grpc_server_host(),
+              port=str(Config.grpc_server_port()),
               max_workers=10)
     if args.run_consensus:
         pubsub_queue = PubSubQueue()
