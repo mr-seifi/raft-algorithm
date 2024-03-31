@@ -3,8 +3,17 @@ syntax = "proto3";
 package consensus;
 
 service Consensus {
+  rpc SayHello (HelloRequest) returns (HelloResponse) {}
   rpc AppendEntries (AppendEntriesRequest) returns (AppendEntriesResponse) {}
   rpc RequestVote (RequestVoteRequest) returns (RequestVoteResponse) {}
+}
+
+message HelloRequest {
+  string name = 1;
+}
+
+message HelloResponse {
+  string message = 1;
 }
 
 message Log {

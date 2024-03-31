@@ -14,6 +14,11 @@ class ConsensusStub(object):
         Args:
             channel: A grpc.Channel.
         """
+        self.SayHello = channel.unary_unary(
+                '/consensus.Consensus/SayHello',
+                request_serializer=consensus__pb2.HelloRequest.SerializeToString,
+                response_deserializer=consensus__pb2.HelloResponse.FromString,
+                )
         self.AppendEntries = channel.unary_unary(
                 '/consensus.Consensus/AppendEntries',
                 request_serializer=consensus__pb2.AppendEntriesRequest.SerializeToString,
@@ -28,6 +33,12 @@ class ConsensusStub(object):
 
 class ConsensusServicer(object):
     """Missing associated documentation comment in .proto file."""
+
+    def SayHello(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
 
     def AppendEntries(self, request, context):
         """Missing associated documentation comment in .proto file."""
@@ -44,6 +55,11 @@ class ConsensusServicer(object):
 
 def add_ConsensusServicer_to_server(servicer, server):
     rpc_method_handlers = {
+            'SayHello': grpc.unary_unary_rpc_method_handler(
+                    servicer.SayHello,
+                    request_deserializer=consensus__pb2.HelloRequest.FromString,
+                    response_serializer=consensus__pb2.HelloResponse.SerializeToString,
+            ),
             'AppendEntries': grpc.unary_unary_rpc_method_handler(
                     servicer.AppendEntries,
                     request_deserializer=consensus__pb2.AppendEntriesRequest.FromString,
@@ -63,6 +79,23 @@ def add_ConsensusServicer_to_server(servicer, server):
  # This class is part of an EXPERIMENTAL API.
 class Consensus(object):
     """Missing associated documentation comment in .proto file."""
+
+    @staticmethod
+    def SayHello(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/consensus.Consensus/SayHello',
+            consensus__pb2.HelloRequest.SerializeToString,
+            consensus__pb2.HelloResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
     def AppendEntries(request,

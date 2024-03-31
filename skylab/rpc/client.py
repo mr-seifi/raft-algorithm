@@ -17,6 +17,13 @@ class Client:
             response = _rpc(message(**arguments))
         return response
 
+    def say_hello(self, base_url: str, name: str):
+        response = self._request(base_url=base_url,
+                                 rpc='SayHello',
+                                 request='HelloRequest',
+                                 arguments={'name': name})
+        return response.message
+
     def append_entries(self, base_url: str, term: int, leader_id: int, prev_log_index: int,
                        prev_log_term: int, entries: list, leader_commit: int) -> (int, bool):
         response = self._request(base_url=base_url,

@@ -10,6 +10,9 @@ class Consensus(consensus_pb2_grpc.ConsensusServicer):
     append_entries_messages = {}
     request_vote_messages = {}
 
+    def SayHello(self, request, context):
+        return consensus_pb2.HelloResponse(message=f"Hello, {request.name}")
+
     def AppendEntries(self, request, context):
         pubsub_queue = PubSubQueue()
         _random_id = uuid4().hex
