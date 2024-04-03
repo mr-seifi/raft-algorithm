@@ -106,12 +106,14 @@ class FollowerState(State):
         if term > self.consensus_service.current_term:
             self.consensus_service.current_term = term
             self.consensus_service.state = FollowerState(consensus_service=self.consensus_service)
+            self.voted_for = candidate_id
             return self.consensus_service.current_term, True
 
         if (self.consensus_service.voted_for is None or self.consensus_service.voted_for == candidate_id) and \
                 ((not self.consensus_service.log) or (
                         last_log_term == self.consensus_service.log[-1].term and last_log_index == len(
                     self.consensus_service.log) - 1)):
+            self.consensus_service.voted_for = candidate_id
             return self.consensus_service.current_term, True
 
         return self.consensus_service.current_term, False
@@ -172,11 +174,13 @@ class CandidateState(State):
         if term > self.consensus_service.current_term:
             self.consensus_service.current_term = term
             self.consensus_service.state = FollowerState(consensus_service=self.consensus_service)
+            self.consensus_service.voted_for = candidate_id
             return self.consensus_service.current_term, True
 
         if (self.consensus_service.voted_for is None or self.consensus_service.voted_for == candidate_id) and \
                 (last_log_term == self.consensus_service.log[-1].term and
                  last_log_index == len(self.consensus_service.log) - 1):
+            self.consensus_service.voted_for = candidate_id
             return self.consensus_service.current_term, True
 
         return self.consensus_service.current_term, False
@@ -255,11 +259,13 @@ class LeaderState(State):
         if term > self.consensus_service.current_term:
             self.consensus_service.current_term = term
             self.consensus_service.state = FollowerState(consensus_service=self.consensus_service)
+            self.consensus_service.voted_for = candidate_id
             return self.consensus_service.current_term, True
 
         if (self.consensus_service.voted_for is None or self.consensus_service.voted_for == candidate_id) and \
                 (last_log_term == self.consensus_service.log[-1].term and
                  last_log_index == len(self.consensus_service.log) - 1):
+            self.consensus_service.voted_for = candidate_id
             return self.consensus_service.current_term, True
 
         return self.consensus_service.current_term, False
