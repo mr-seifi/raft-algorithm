@@ -107,7 +107,7 @@ class FollowerState(State):
         if term > self.consensus_service.current_term:
             self.consensus_service.current_term = term
             self.consensus_service.state = FollowerState(consensus_service=self.consensus_service)
-            return self.consensus_service.current_term, False
+            return self.consensus_service.current_term, True
 
         if (self.consensus_service.voted_for is None or self.consensus_service.voted_for == candidate_id) and \
                 ((not self.consensus_service.log) or (
