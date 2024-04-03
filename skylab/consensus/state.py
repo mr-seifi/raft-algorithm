@@ -78,7 +78,7 @@ class FollowerState(State):
         if len(self.consensus_service.log) - 1 < prev_log_index:
             return self.consensus_service.current_term, False
 
-        if self.consensus_service.log[prev_log_index].term != prev_log_term:
+        if self.consensus_service.log and (self.consensus_service.log[prev_log_index].term != prev_log_term):
             self.consensus_service.log = self.consensus_service.log[:prev_log_index]
 
         # TODO: Check not to be in logs
