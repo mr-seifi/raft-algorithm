@@ -14,7 +14,7 @@ def main():
     logging.basicConfig(level=getattr(logging, Config.logging_level()),
                         filename=Config.logging_filename(),
                         filemode="w",
-                        format="$(asctime)s-$(levelname)s-$(message)s",)
+                        format="%(asctime)s-%(levelname)s-%(message)s",)
 
     parser = argparse.ArgumentParser(
         prog='Skylab',
