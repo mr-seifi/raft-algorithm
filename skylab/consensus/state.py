@@ -69,11 +69,10 @@ class FollowerState(State):
             self.consensus_service.current_leader = leader_id
             self.consensus_service.state = FollowerState(consensus_service=self.consensus_service)
             return self.consensus_service.current_term, True
-            # return self.consensus_service.run()
 
         # Follower Role
-        if self.consensus_service.current_leader != leader_id:
-            return -1, False
+        # if self.consensus_service.current_leader != leader_id:
+        #     return -1, False
 
         # TODO: Check the first condition
         if len(self.consensus_service.log) - 1 < prev_log_index:
