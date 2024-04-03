@@ -209,7 +209,7 @@ class CandidateState(State):
             self.consensus_service.state = LeaderState(consensus_service=self.consensus_service)
             self.consensus_service.next_index = [self.consensus_service.last_applied + 1 for _ in
                                                  Config.trusted_nodes()]
-            self.consensus_service.match_index = [0 for _ in Config.trusted_nodes()]
+            self.consensus_service.match_index = [-1 for _ in Config.trusted_nodes()]
             self.consensus_service.current_leader = self.consensus_service.id
             return self.consensus_service.run()
 
