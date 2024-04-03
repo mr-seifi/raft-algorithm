@@ -75,3 +75,11 @@ class Config:
     @classmethod
     def mongo_database(cls) -> str:
         return cls._loaded.get("MONGO_DATABASE")
+
+    @classmethod
+    def logging_level(cls) -> str:
+        return cls._loaded.get("LOGGING_LEVEL")
+
+    @classmethod
+    def logging_filename(cls) -> str:
+        return cls._loaded.get("LOGGING_FILENAME")

@@ -1,3 +1,5 @@
+import logging
+
 from skylab.app.config import Config
 from skylab.broker.queue import PubSubQueue, produce_by_consensus
 from skylab.storage.mongo import MongoService
@@ -83,6 +85,8 @@ class Consensus:
 
     def run(self):
         self.store()
+        logging.info(self.__str__())
+
         return self.state.run()
 
     def start(self):
@@ -124,3 +128,8 @@ class Consensus:
                                                data={'_id': item['_id'], 'term': term, 'granted': granted})
                 if not success:
                     raise Exception('[Exception|start]: Failed to produce by consensus')
+
+    def __str__(self):
+        return f"{self.current_term} - {str(self.state)}\n[VOTED_FOR:{self.voted_for}, LAST_APPLIED:{self.last_applied}, " \
+               f"COMMIT_INDEX:{self.commit_index}, CURRENT_LEADER:{self.current_leader}, NEXT_INDEX:{self.next_index}, " \
+               f"MATCH_INDEX: {self.match_index}, LOG: {self.log}]"

@@ -1,3 +1,5 @@
+import logging
+
 import grpc
 import time
 from concurrent import futures
@@ -16,16 +18,19 @@ class Consensus(consensus_pb2_grpc.ConsensusServicer):
     def AppendEntries(self, request, context):
         pubsub_queue = PubSubQueue()
         _random_id = uuid4().hex
+        data = {'_id': _random_id,
+                'term': request.term,
+                'leader_id': request.leaderId,
+                'prev_log_index': request.prevLogIndex,
+                'prev_log_term': request.prevLogTerm,
+                'entries': [{'log_term': entry.logTerm, 'command': entry.command}
+                            for entry in request.entries],
+                'leader_commit': request.leaderCommit}
+
+        logging.info(f"Received AppendEntries: {data.items()}")
         success = produce_by_rpc(queue=pubsub_queue,
                                  data_type='append_entries',
-                                 data={'_id': _random_id,
-                                       'term': request.term,
-                                       'leader_id': request.leaderId,
-                                       'prev_log_index': request.prevLogIndex,
-                                       'prev_log_term': request.prevLogTerm,
-                                       'entries': [{'log_term': entry.logTerm, 'command': entry.command}
-                                                   for entry in request.entries],
-                                       'leader_commit': request.leaderCommit})
+                                 data=data)
         if not success:
             raise Exception('[Exception|AppendEntries]: Failed to produce by rpc')
 
@@ -39,19 +44,24 @@ class Consensus(consensus_pb2_grpc.ConsensusServicer):
                 break
             time.sleep(0.01)
 
+        logging.info(f"Respond AppendEntries: [{_random_id}] "
+                     f"(term, {response.get('term')}), (success, {response.get('success')})")
         return consensus_pb2.AppendEntriesResponse(term=response.get('term'),
                                                    success=response.get('success'))
 
     def RequestVote(self, request, context):
         pubsub_queue = PubSubQueue()
         _random_id = uuid4().hex
+        data = {'_id': _random_id,
+                'term': request.term,
+                'candidate_id': request.candidateId,
+                'last_log_index': request.lastLogIndex,
+                'last_log_term': request.lastLogTerm}
+
+        logging.info(f"Received RequestVote: {data.items()}")
         success = produce_by_rpc(queue=pubsub_queue,
                                  data_type='request_vote',
-                                 data={'_id': _random_id,
-                                       'term': request.term,
-                                       'candidate_id': request.candidateId,
-                                       'last_log_index': request.lastLogIndex,
-                                       'last_log_term': request.lastLogTerm})
+                                 data=data)
         if not success:
             raise Exception('[Exception|RequestVote]: Failed to produce by rpc')
 
@@ -65,6 +75,8 @@ class Consensus(consensus_pb2_grpc.ConsensusServicer):
                 break
             time.sleep(0.01)
 
+        logging.info(f"Respond RequestVote: [{_random_id}] "
+                     f"(term, {response.get('term')}), (granted, {response.get('granted')})")
         return consensus_pb2.RequestVoteResponse(term=response.get('term'), granted=response.get('granted'))
 
 

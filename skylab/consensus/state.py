@@ -127,6 +127,9 @@ class FollowerState(State):
     def run(self):
         self.reset_timer()
 
+    def __str__(self) -> str:
+        return "FOLLOWER"
+
 
 class CandidateState(State):
     def __init__(self, consensus_service: Consensus):
@@ -206,6 +209,9 @@ class CandidateState(State):
             self.consensus_service.match_index = [0 for _ in Config.trusted_nodes()]
             self.consensus_service.current_leader = self.consensus_service.id
             return self.consensus_service.run()
+
+    def __str__(self) -> str:
+        return "CANDIDATE"
 
 
 class LeaderState(State):
@@ -309,3 +315,6 @@ class LeaderState(State):
                     self.consensus_service.next_index[node_index] -= 1
 
         # TODO: Last Condition: Exist N > ...
+
+    def __str__(self) -> str:
+        return "LEADER"
