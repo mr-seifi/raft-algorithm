@@ -73,4 +73,4 @@ class Client:
                     results.append(result)
             except TimeoutError:
                 ...
-        return result, len(results) == len(self.trusted_nodes)
+        return results, len(results) == len(self.trusted_nodes)
