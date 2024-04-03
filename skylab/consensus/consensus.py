@@ -13,7 +13,7 @@ class Consensus:
     Q = Queue()
 
     def __init__(self, current_term=0, voted_for=None, log=[],
-                 commit_index=0, last_applied=0, current_leader=None,
+                 commit_index=-1, last_applied=-1, current_leader=None,
                  next_index=[], match_index=[]):
         from skylab.consensus.state import FollowerState
 
