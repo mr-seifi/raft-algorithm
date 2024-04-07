@@ -50,7 +50,7 @@ message RequestVoteResponse {
 
 service Request {
   rpc SayHello (HelloRequest) returns (HelloResponse) {}
-  rpc AddLog (AddLogRequest) returns (AddLogResponse);
+  rpc AddLog (AddLogRequest) returns (AddLogResponse) {}
 }
 
 message AddLogRequest {
