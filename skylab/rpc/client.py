@@ -11,8 +11,8 @@ class Client:
 
     def _request(self, base_url: str, stub: str, rpc: str, request: str, arguments: dict):
         with grpc.insecure_channel(base_url) as channel:
-            stub = getattr(consensus_pb2_grpc, stub + 'Stub')(channel)
-            _rpc = getattr(stub, rpc)
+            _stub = getattr(consensus_pb2_grpc, stub + 'Stub')(channel)
+            _rpc = getattr(_stub, rpc)
             message = getattr(consensus_pb2, request)
             response = _rpc(message(**arguments))
         return response
