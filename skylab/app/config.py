@@ -9,12 +9,20 @@ class Config:
         cls._loaded = dotenv_values(file)
 
     @classmethod
-    def grpc_server_host(cls) -> str:
-        return cls._loaded.get("GRPC_SERVER_HOST", "localhost")
+    def grpc_consensus_server_host(cls) -> str:
+        return cls._loaded.get("GRPC_CONSENSUS_SERVER_HOST", "localhost")
 
     @classmethod
-    def grpc_server_port(cls) -> int:
-        return int(cls._loaded.get("GRPC_SERVER_PORT", "50051"))
+    def grpc_consensus_server_port(cls) -> int:
+        return int(cls._loaded.get("GRPC_CONSENSUS_SERVER_PORT", "50051"))
+
+    @classmethod
+    def grpc_request_server_host(cls) -> str:
+        return cls._loaded.get("GRPC_REQUEST_SERVER_HOST", "localhost")
+
+    @classmethod
+    def grpc_request_server_port(cls) -> int:
+        return int(cls._loaded.get("GRPC_REQUEST_SERVER_PORT", "40051"))
 
     @classmethod
     def proto_files(cls) -> list:

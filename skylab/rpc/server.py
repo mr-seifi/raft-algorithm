@@ -151,9 +151,17 @@ class Request(consensus_pb2_grpc.RequestServicer):
                                             response=response.get('response'))
 
 
-def serve(host: str, port: str, max_workers: int):
+def serve_consensus(host: str, port: str, max_workers: int):
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=max_workers))
     consensus_pb2_grpc.add_ConsensusServicer_to_server(Consensus(), server)
+    server.add_insecure_port(host + ":" + port)
+    server.start()
+    print("Server started, listening on " + port)
+    server.wait_for_termination()
+
+def serve_request(host: str, port: str, max_workers: int):
+    server = grpc.server(futures.ThreadPoolExecutor(max_workers=max_workers))
+    consensus_pb2_grpc.add_RequestServicer_to_server(Request(), server)
     server.add_insecure_port(host + ":" + port)
     server.start()
     print("Server started, listening on " + port)

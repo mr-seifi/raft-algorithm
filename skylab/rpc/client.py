@@ -6,7 +6,7 @@ from concurrent.futures import ThreadPoolExecutor, TimeoutError, as_completed
 
 class Client:
     def __init__(self):
-        self.base_url = f"{Config.grpc_server_host()}:{Config.grpc_server_port()}"
+        self.base_url = f"{Config.grpc_consensus_server_host()}:{Config.grpc_consensus_server_port()}"
         self.trusted_nodes = Config.trusted_nodes()
 
     def _request(self, base_url: str, stub: str, rpc: str, request: str, arguments: dict):
