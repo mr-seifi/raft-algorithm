@@ -74,3 +74,11 @@ class Client:
             except TimeoutError:
                 ...
         return results, len(results) == len(self.trusted_nodes)
+
+    def add_log_request(self, base_url: str, log: consensus_pb2.Log) -> (int, bool):
+        response = self._request(base_url=base_url,
+                                 rpc='Request',
+                                 request='AddLogRequest',
+                                 arguments={'log': log})
+
+        return response.success, response.response
