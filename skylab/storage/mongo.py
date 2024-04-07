@@ -18,13 +18,13 @@ class MongoService:
         return cls._instance
 
     def store_configuration(self, current_term: int, voted_for, commit_index: int, last_applied: int,
-                            current_leader: int, next_index: list, match_index: list) -> bool:
+                            next_index: list, match_index: list) -> bool:
         c = self.db['configuration']
         r = c.update_one(
             filter={'_id': 1},
             update={
                 '$set': {'_id': 1, 'current_term': current_term, 'voted_for': voted_for, 'commit_index': commit_index,
-                         'last_applied': last_applied, 'current_leader': current_leader, 'next_index': next_index,
+                         'last_applied': last_applied, 'next_index': next_index,
                          'match_index': match_index}},
             upsert=True
         )

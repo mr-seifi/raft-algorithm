@@ -1,4 +1,5 @@
 import signal
+import threading
 from random import randint
 from skylab.app.config import Config
 from skylab.consensus.consensus import Consensus
@@ -26,11 +27,6 @@ class State:
     def reply_vote_request(self, term: int, candidate_id: int,
                            last_log_index: int, last_log_term: int) -> (int, bool):
         ...
-
-    def exec_last_log_command(self):
-        if self.consensus_service.commit_index > self.consensus_service.last_applied:
-            self.consensus_service.last_applied += 1
-            self.consensus_service.log[self.consensus_service.last_applied - 1].exec()
 
     def handle_request(self, log):
         ...
@@ -66,13 +62,8 @@ class FollowerState(State):
 
         if term > self.consensus_service.current_term:
             self.consensus_service.current_term = term
-            self.consensus_service.current_leader = leader_id
             self.consensus_service.state = FollowerState(consensus_service=self.consensus_service)
             return self.consensus_service.current_term, True
-
-        # Follower Role
-        # if self.consensus_service.current_leader != leader_id:
-        #     return -1, False
 
         # TODO: Check the first condition
         if len(self.consensus_service.log) - 1 < prev_log_index:
@@ -84,11 +75,10 @@ class FollowerState(State):
         # TODO: Check not to be in logs
         # TODO: Check exec that should be last - 1 or last
         for entry in entries:
-            self.consensus_service.log.append(
-                Log(term=entry.logTerm,
-                    command=entry.command)
-            )
-            self.exec_last_log_command()
+            log = Log(term=entry.logTerm, command=entry.command)
+            self.consensus_service.log.append(log)
+
+            log.exec()
             self.consensus_service.last_applied += 1
 
         if leader_commit > self.consensus_service.commit_index:
@@ -117,9 +107,6 @@ class FollowerState(State):
             return self.consensus_service.current_term, True
 
         return self.consensus_service.current_term, False
-
-    def exec_last_log_command(self):
-        super().exec_last_log_command()
 
     def handle_request(self, log):
         # TODO: Forward it to leader
@@ -158,7 +145,6 @@ class CandidateState(State):
 
         if term > self.consensus_service.current_term:
             self.consensus_service.current_term = term
-            self.consensus_service.current_leader = leader_id
             self.consensus_service.state = FollowerState(consensus_service=self.consensus_service)
             return self.consensus_service.current_term, True
 
@@ -185,9 +171,6 @@ class CandidateState(State):
 
         return self.consensus_service.current_term, False
 
-    def exec_last_log_command(self):
-        super().exec_last_log_command()
-
     def handle_request(self, log):
         ...
 
@@ -210,7 +193,6 @@ class CandidateState(State):
             self.consensus_service.next_index = [self.consensus_service.last_applied + 1 for _ in
                                                  Config.trusted_nodes()]
             self.consensus_service.match_index = [-1 for _ in Config.trusted_nodes()]
-            self.consensus_service.current_leader = self.consensus_service.id
             return self.consensus_service.run()
 
     def __str__(self) -> str:
@@ -243,7 +225,6 @@ class LeaderState(State):
 
         if term > self.consensus_service.current_term:
             self.consensus_service.current_term = term
-            self.consensus_service.current_leader = leader_id
             self.consensus_service.state = FollowerState(consensus_service=self.consensus_service)
             return self.consensus_service.current_term, True
 
@@ -270,18 +251,12 @@ class LeaderState(State):
 
         return self.consensus_service.current_term, False
 
-    def exec_last_log_command(self):
-        super().exec_last_log_command()
+    def handle_request(self, log: dict) -> bool:
+        log = Log(term=log['term'], command=log['command'])
+        self.consensus_service.log.append(log)
 
-    def handle_request(self, log: dict):
-        self.consensus_service.log.append(
-            Log(term=log['term'],
-                command=log['command'])
-        )
-        self.exec_last_log_command()
-        self.consensus_service.last_applied += 1
-
-        return  # RESPONSE
+        log.exec()
+        return True
 
     def run(self):
         self.consensus_service.reset_timer()
@@ -309,7 +284,6 @@ class LeaderState(State):
 
                 if term > self.consensus_service.current_term:
                     self.consensus_service.current_term = term
-                    self.consensus_service.current_leader = -1  # TODO: Fill current_leader
                     self.consensus_service.state = FollowerState(consensus_service=self.consensus_service)
                     return self.consensus_service.run()
 
@@ -319,7 +293,16 @@ class LeaderState(State):
                 else:
                     self.consensus_service.next_index[node_index] -= 1
 
-        # TODO: Last Condition: Exist N > ...
+        if len(self.consensus_service.log) > self.consensus_service.commit_index:
+            majority_match_indices = 0
+            N = self.consensus_service.commit_index + 1
+            for match_index in self.consensus_service.match_index:
+                if match_index >= N:
+                    majority_match_indices += 1
+
+            if majority_match_indices >= len(Config.trusted_nodes()) // 2 + 1 and \
+                    self.consensus_service.log[N].term == self.consensus_service.current_term:
+                self.consensus_service.commit_index = N
 
     def __str__(self) -> str:
         return "LEADER"

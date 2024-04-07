@@ -46,3 +46,18 @@ message RequestVoteResponse {
   int32 term = 1;
   bool granted = 2;
 }
+
+
+service Request {
+  rpc SayHello (HelloRequest) returns (HelloResponse) {}
+  rpc AddLog (AddLogRequest) returns (AddLogResponse);
+}
+
+message AddLogRequest {
+  Log log = 1;
+}
+
+message AddLogResponse {
+  bool success = 1;
+  string response = 2;
+}

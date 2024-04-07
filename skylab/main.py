@@ -13,7 +13,7 @@ def main():
 
     logging.basicConfig(level=getattr(logging, Config.logging_level()),
                         filename=Config.logging_filename(),
-                        filemode="w",
+                        filemode="a",
                         format="%(asctime)s-%(levelname)s-%(message)s",)
 
     parser = argparse.ArgumentParser(

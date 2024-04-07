@@ -13,19 +13,16 @@ class Consensus:
     Q = Queue()
 
     def __init__(self, current_term=0, voted_for=None, log=[],
-                 commit_index=-1, last_applied=-1, current_leader=None,
+                 commit_index=-1, last_applied=-1,
                  next_index=[], match_index=[]):
         from skylab.consensus.state import FollowerState
 
-        # TODO: Write state read, write function
-        # TODO: Persist Storage
         self.id = Config.node_id()
         self.current_term = current_term
         self.voted_for = voted_for
         self.log = log
         self.commit_index = commit_index
         self.last_applied = last_applied
-        self.current_leader = current_leader
 
         # Initialized to leader
         self.next_index = next_index
@@ -37,8 +34,7 @@ class Consensus:
         mongo_service = MongoService.obtain()
         mongo_service.store_configuration(current_term=self.current_term, voted_for=self.voted_for,
                                           commit_index=self.commit_index, last_applied=self.last_applied,
-                                          current_leader=self.current_leader, next_index=self.next_index,
-                                          match_index=self.match_index)
+                                          next_index=self.next_index, match_index=self.match_index)
         mongo_service.store_logs(logs=[log.encode() for log in self.log])
 
     def load(self):
@@ -51,11 +47,9 @@ class Consensus:
         self.voted_for = configuration['voted_for']
         self.commit_index = configuration['commit_index']
         self.last_applied = configuration['last_applied']
-        self.current_leader = configuration['current_leader']
         self.next_index = configuration['next_index']
         self.match_index = configuration['match_index']
         self.log = [decode_log(log) for log in logs]
-
 
     def set_timer(self):
         self.state.set_timer()
@@ -76,9 +70,6 @@ class Consensus:
                            last_log_index: int, last_log_term: int) -> (int, bool):
         return self.state.reply_vote_request(term=term, candidate_id=candidate_id, last_log_index=last_log_index,
                                              last_log_term=last_log_term)
-
-    def exec_last_log_command(self):
-        return self.state.exec_last_log_command()
 
     def request(self, log):
         return self.state.handle_request(log=log)
@@ -111,7 +102,8 @@ class Consensus:
                                                data_type=data_type,
                                                data={'_id': item['_id'], 'term': term, 'success': success})
                 if not success:
-                    raise Exception('[Exception|start]: Failed to produce by consensus')
+                    logging.error('[Exception|start]: Failed to produce by consensus')
+                    continue
 
                 if isinstance(self.state, CandidateState):
                     self.state = FollowerState(consensus_service=self)
@@ -127,9 +119,24 @@ class Consensus:
                                                data_type=data_type,
                                                data={'_id': item['_id'], 'term': term, 'granted': granted})
                 if not success:
-                    raise Exception('[Exception|start]: Failed to produce by consensus')
+                    logging.error('[Exception|start]: Failed to produce by consensus')
+                    continue
+
+            elif data_type == "add_log_request":
+                success = self.request(log=item['log'])
+                if not success:
+                    logging.error('[Exception|start]: Failed to run the log command')
+                    continue
+
+                produced_successfully = produce_by_consensus(queue=pubsub_queue,
+                                                             data_type=data_type,
+                                                             data={'_id': item['_id'],
+                                                                   'success': success})
+                if not produced_successfully:
+                    logging.error('[Exception|produce_by_consensus_to_request_rpc]: Failed to produce to request rpc')
+                    continue
 
     def __str__(self):
         return f"{self.current_term} - {str(self.state)}\n[VOTED_FOR:{self.voted_for}, LAST_APPLIED:{self.last_applied}, " \
-               f"COMMIT_INDEX:{self.commit_index}, CURRENT_LEADER:{self.current_leader}, NEXT_INDEX:{self.next_index}, " \
+               f"COMMIT_INDEX:{self.commit_index}, NEXT_INDEX:{self.next_index}, " \
                f"MATCH_INDEX: {self.match_index}, LOG: {self.log}]"

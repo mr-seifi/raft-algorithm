@@ -68,3 +68,17 @@ class RequestVoteResponse(_message.Message):
     term: int
     granted: bool
     def __init__(self, term: _Optional[int] = ..., granted: bool = ...) -> None: ...
+
+class AddLogRequest(_message.Message):
+    __slots__ = ("log",)
+    LOG_FIELD_NUMBER: _ClassVar[int]
+    log: Log
+    def __init__(self, log: _Optional[_Union[Log, _Mapping]] = ...) -> None: ...
+
+class AddLogResponse(_message.Message):
+    __slots__ = ("success", "response")
+    SUCCESS_FIELD_NUMBER: _ClassVar[int]
+    RESPONSE_FIELD_NUMBER: _ClassVar[int]
+    success: bool
+    response: str
+    def __init__(self, success: bool = ..., response: _Optional[str] = ...) -> None: ...
