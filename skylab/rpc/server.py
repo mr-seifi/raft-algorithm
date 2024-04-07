@@ -12,14 +12,15 @@ class Consensus(consensus_pb2_grpc.ConsensusServicer):
     append_entries_messages = {}
     request_vote_messages = {}
 
-    def authorize(self, ip_address: str):
+    def authorize(self, context):
         allowed_hosts = [address.split(':')[0] for address in Config.trusted_nodes()]
-        logging.info(f"IP: {ip_address}, ALLOWED_HOSTS: {allowed_hosts}")
+        ip_address = context.peer().split(':')[1]
+        for key, value in context.invocation_metadata():
+            logging.info("Received initial metadata: key=%s value=%s" % (key, value))
         return ip_address in allowed_hosts
 
     def SayHello(self, request, context):
-        ip_address = context.peer().split(':')[1]
-        if not self.authorize(ip_address=ip_address):
+        if not self.authorize(context=context):
             # context.set_code(grpc.StatusCode.PERMISSION_DENIED)
             # context.set_details("Access Denied!")
             # return context, None
@@ -27,8 +28,7 @@ class Consensus(consensus_pb2_grpc.ConsensusServicer):
         return consensus_pb2.HelloResponse(message=f"Hello, {request.name}")
 
     def AppendEntries(self, request, context):
-        ip_address = context.peer().split(':')[1]
-        if not self.authorize(ip_address=ip_address):
+        if not self.authorize(context=context):
             # context.set_code(grpc.StatusCode.PERMISSION_DENIED)
             # context.set_details("Access Denied!")
             # return context, None
@@ -72,7 +72,7 @@ class Consensus(consensus_pb2_grpc.ConsensusServicer):
 
     def RequestVote(self, request, context):
         ip_address = context.peer().split(':')[1]
-        if not self.authorize(ip_address=ip_address):
+        if not self.authorize(context=context):
             # context.set_code(grpc.StatusCode.PERMISSION_DENIED)
             # context.set_details("Access Denied!")
             # return context, None
