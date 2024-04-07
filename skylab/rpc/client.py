@@ -9,9 +9,9 @@ class Client:
         self.base_url = f"{Config.grpc_server_host()}:{Config.grpc_server_port()}"
         self.trusted_nodes = Config.trusted_nodes()
 
-    def _request(self, base_url: str, rpc: str, request: str, arguments: dict):
+    def _request(self, base_url: str, stub: str, rpc: str, request: str, arguments: dict):
         with grpc.insecure_channel(base_url) as channel:
-            stub = consensus_pb2_grpc.ConsensusStub(channel)
+            stub = getattr(consensus_pb2_grpc, stub + 'Stub')(channel)
             _rpc = getattr(stub, rpc)
             message = getattr(consensus_pb2, request)
             response = _rpc(message(**arguments))
@@ -19,6 +19,7 @@ class Client:
 
     def say_hello(self, base_url: str, name: str):
         response = self._request(base_url=base_url,
+                                 stub='Consensus',
                                  rpc='SayHello',
                                  request='HelloRequest',
                                  arguments={'name': name})
@@ -27,6 +28,7 @@ class Client:
     def append_entries(self, base_url: str, term: int, leader_id: int, prev_log_index: int,
                        prev_log_term: int, entries: list, leader_commit: int) -> (int, bool):
         response = self._request(base_url=base_url,
+                                 stub='Consensus',
                                  rpc='AppendEntries',
                                  request='AppendEntriesRequest',
                                  arguments={'term': term, 'leaderId': leader_id, 'prevLogIndex': prev_log_index,
@@ -53,6 +55,7 @@ class Client:
     def request_vote(self, base_url: str, term: int, candidate_id: int,
                      last_log_index: int, last_log_term: int) -> (int, bool):
         response = self._request(base_url=base_url,
+                                 stub='Consensus',
                                  rpc='RequestVote',
                                  request='RequestVoteRequest',
                                  arguments={'term': term, 'candidateId': candidate_id,
@@ -77,7 +80,8 @@ class Client:
 
     def add_log_request(self, base_url: str, log: consensus_pb2.Log) -> (int, bool):
         response = self._request(base_url=base_url,
-                                 rpc='Request',
+                                 stub='Request',
+                                 rpc='AddLog',
                                  request='AddLogRequest',
                                  arguments={'log': log})
 
