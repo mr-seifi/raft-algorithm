@@ -36,23 +36,19 @@ def main():
                 break
             compile_proto(proto_file)
     if args.run_consensus_server:
-        pubsub_queue = PubSubQueue()
-        consumer_thread = threading.Thread(target=consume_by_rpc, args=(pubsub_queue,))
-        consumer_thread.start()
         serve_consensus(host=Config.grpc_consensus_server_host(),
                         port=str(Config.grpc_consensus_server_port()),
                         max_workers=10)
     if args.run_request_server:
-        pubsub_queue = PubSubQueue()
-        consumer_thread = threading.Thread(target=consume_by_rpc, args=(pubsub_queue,))
-        consumer_thread.start()
         serve_request(host=Config.grpc_request_server_host(),
                       port=str(Config.grpc_request_server_port()),
                       max_workers=10)
     if args.run_consensus:
         pubsub_queue = PubSubQueue()
-        consumer_thread = threading.Thread(target=consume_by_consensus, args=(pubsub_queue,))
-        consumer_thread.start()
+        consumer_by_consensus = threading.Thread(target=consume_by_consensus, args=(pubsub_queue,))
+        consumer_by_rpc = threading.Thread(target=consume_by_rpc, args=(pubsub_queue,))
+        consumer_by_consensus.start()
+        consumer_by_rpc.start()
         consensus_service = Consensus()
         consensus_service.start()
 
