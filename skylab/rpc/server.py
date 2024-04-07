@@ -19,17 +19,19 @@ class Consensus(consensus_pb2_grpc.ConsensusServicer):
     def SayHello(self, request, context):
         ip_address = context.peer().split(':')[1]
         if not self.authorize(ip_address=ip_address):
-            context.set_code(grpc.StatusCode.PERMISSION_DENIED)
-            context.set_details("Access Denied!")
-            return context, None
+            # context.set_code(grpc.StatusCode.PERMISSION_DENIED)
+            # context.set_details("Access Denied!")
+            # return context, None
+            return consensus_pb2.HelloResponse(message="")
         return consensus_pb2.HelloResponse(message=f"Hello, {request.name}")
 
     def AppendEntries(self, request, context):
         ip_address = context.peer().split(':')[1]
         if not self.authorize(ip_address=ip_address):
-            context.set_code(grpc.StatusCode.PERMISSION_DENIED)
-            context.set_details("Access Denied!")
-            return context, None
+            # context.set_code(grpc.StatusCode.PERMISSION_DENIED)
+            # context.set_details("Access Denied!")
+            # return context, None
+            return consensus_pb2.AppendEntriesResponse(term=-1, success=False)
 
         pubsub_queue = PubSubQueue()
         _random_id = uuid4().hex
@@ -70,9 +72,10 @@ class Consensus(consensus_pb2_grpc.ConsensusServicer):
     def RequestVote(self, request, context):
         ip_address = context.peer().split(':')[1]
         if not self.authorize(ip_address=ip_address):
-            context.set_code(grpc.StatusCode.PERMISSION_DENIED)
-            context.set_details("Access Denied!")
-            return context, None
+            # context.set_code(grpc.StatusCode.PERMISSION_DENIED)
+            # context.set_details("Access Denied!")
+            # return context, None
+            return consensus_pb2.RequestVoteResponse(term=-1, granted=False)
 
         pubsub_queue = PubSubQueue()
         _random_id = uuid4().hex
@@ -123,10 +126,13 @@ class Request(consensus_pb2_grpc.RequestServicer):
                                  data_type='add_log_request',
                                  data=data)
         if not success:
-            logging.error('[Exception|AddLog]: Failed to produce by rpc')
-            context.set_code(grpc.StatusCode.CANCELLED)
-            context.set_details("Bad request!")
-            return context, None
+            # logging.error('[Exception|AddLog]: Failed to produce by rpc')
+            # context.set_code(grpc.StatusCode.CANCELLED)
+            # context.set_details("Bad request!")
+            # return context, None
+            return consensus_pb2.AddLogResponse(success=False,
+                                                response="")
+
 
         response = {}
         timeout = time.time() + 60
@@ -142,8 +148,6 @@ class Request(consensus_pb2_grpc.RequestServicer):
                      f"(success, {response.get('success')})")
         return consensus_pb2.AddLogResponse(success=response.get('success'),
                                             response=response.get('response'))
-
-        return consensus_pb2.AddLogResponse(response="")
 
 
 def serve(host: str, port: str, max_workers: int):
