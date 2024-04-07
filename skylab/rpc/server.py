@@ -14,6 +14,7 @@ class Consensus(consensus_pb2_grpc.ConsensusServicer):
 
     def authorize(self, ip_address: str):
         allowed_hosts = [address.split(':')[0] for address in Config.trusted_nodes()]
+        logging.info(f"IP: {ip_address}, ALLOWED_HOSTS: {allowed_hosts}")
         return ip_address in allowed_hosts
 
     def SayHello(self, request, context):
