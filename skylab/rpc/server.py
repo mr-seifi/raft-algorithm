@@ -1,6 +1,7 @@
 import logging
 import grpc
 import time
+import re
 from concurrent import futures
 from .config import consensus_pb2, consensus_pb2_grpc
 from skylab.broker.queue import PubSubQueue, produce_by_rpc
@@ -11,13 +12,12 @@ from uuid import uuid4
 class Consensus(consensus_pb2_grpc.ConsensusServicer):
     append_entries_messages = {}
     request_vote_messages = {}
+    WHITELIST_REGEX = r'(?:10\.\d+\.\d+\.\d+)'
 
     def authorize(self, context):
         allowed_hosts = [address.split(':')[0] for address in Config.trusted_nodes()]
         ip_address = context.peer().split(':')[1]
-        for key, value in context.invocation_metadata():
-            logging.info("Received initial metadata: key=%s value=%s" % (key, value))
-        return ip_address in allowed_hosts
+        return ip_address in allowed_hosts or (re.match(self.WHITELIST_REGEX, ip_address) is not None)
 
     def SayHello(self, request, context):
         if not self.authorize(context=context):
