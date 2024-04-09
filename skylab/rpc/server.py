@@ -117,7 +117,8 @@ class Request(consensus_pb2_grpc.RequestServicer):
         message_broker = MessageBroker(channel_name=MessageBroker.Channels.REQUEST_TO_CONSENSUS)
         _random_id = uuid4().hex
         data = {'_id': _random_id,
-                'log': request.log}
+                'log': {'log_term': request.log.logTerm,
+                        'command': request.log.command}}
 
         success = message_broker.produce(data_type='add_log_request', data=data)
         if not success:
