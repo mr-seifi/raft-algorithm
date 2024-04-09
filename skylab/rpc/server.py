@@ -4,7 +4,7 @@ import time
 import re
 from concurrent import futures
 from .config import consensus_pb2, consensus_pb2_grpc
-from skylab.broker.queue import PubSubQueue, produce_by_rpc
+from skylab.broker import MessageBroker
 from skylab.app.config import Config
 from uuid import uuid4
 
@@ -34,7 +34,7 @@ class Consensus(consensus_pb2_grpc.ConsensusServicer):
             # return context, None
             return consensus_pb2.AppendEntriesResponse(term=-1, success=False)
 
-        pubsub_queue = PubSubQueue()
+        message_broker = MessageBroker(channel_name=MessageBroker.Channels.RPC_TO_CONSENSUS)
         _random_id = uuid4().hex
         data = {'_id': _random_id,
                 'term': request.term,
@@ -46,9 +46,7 @@ class Consensus(consensus_pb2_grpc.ConsensusServicer):
                 'leader_commit': request.leaderCommit}
 
         logging.info(f"Received AppendEntries: {data.items()}")
-        success = produce_by_rpc(queue=pubsub_queue,
-                                 data_type='append_entries',
-                                 data=data)
+        success = message_broker.produce(data_type='append_entries', data=data)
         if not success:
             logging.error('[Exception|AppendEntries]: Failed to produce by rpc')
             context.set_code(grpc.StatusCode.CANCELLED)
@@ -78,7 +76,7 @@ class Consensus(consensus_pb2_grpc.ConsensusServicer):
             # return context, None
             return consensus_pb2.RequestVoteResponse(term=-1, granted=False)
 
-        pubsub_queue = PubSubQueue()
+        message_broker = MessageBroker(channel_name=MessageBroker.Channels.RPC_TO_CONSENSUS)
         _random_id = uuid4().hex
         data = {'_id': _random_id,
                 'term': request.term,
@@ -87,9 +85,7 @@ class Consensus(consensus_pb2_grpc.ConsensusServicer):
                 'last_log_term': request.lastLogTerm}
 
         logging.info(f"Received RequestVote: {data.items()}")
-        success = produce_by_rpc(queue=pubsub_queue,
-                                 data_type='request_vote',
-                                 data=data)
+        success = message_broker.produce(data_type='request_vote', data=data)
         if not success:
             logging.error('[Exception|RequestVote]: Failed to produce by rpc')
             context.set_code(grpc.StatusCode.CANCELLED)
@@ -118,14 +114,12 @@ class Request(consensus_pb2_grpc.RequestServicer):
         return consensus_pb2.HelloResponse(message=f"Hello, {request.name}")
 
     def AddLog(self, request, context):
-        pubsub_queue = PubSubQueue()
+        message_broker = MessageBroker(channel_name=MessageBroker.Channels.REQUEST_TO_CONSENSUS)
         _random_id = uuid4().hex
         data = {'_id': _random_id,
                 'log': request.log}
 
-        success = produce_by_rpc(queue=pubsub_queue,
-                                 data_type='add_log_request',
-                                 data=data)
+        success = message_broker.produce(data_type='add_log_request', data=data)
         if not success:
             # logging.error('[Exception|AddLog]: Failed to produce by rpc')
             # context.set_code(grpc.StatusCode.CANCELLED)

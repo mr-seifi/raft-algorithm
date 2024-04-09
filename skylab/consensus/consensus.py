@@ -1,7 +1,7 @@
 import logging
 
 from skylab.app.config import Config
-from skylab.broker.queue import PubSubQueue, produce_by_consensus
+from skylab.broker import MessageBroker
 from skylab.storage.mongo import MongoService
 from skylab.consensus.log import decode_log
 from queue import Queue
@@ -84,7 +84,6 @@ class Consensus:
         self.load()
         self.run()
 
-        pubsub_queue = PubSubQueue()
         from skylab.consensus.state import FollowerState, CandidateState, LeaderState
         while True:
             item = Consensus.Q.get()
@@ -98,9 +97,9 @@ class Consensus:
                     entries=item['entries'],
                     leader_commit=item['leader_commit']
                 )
-                success = produce_by_consensus(queue=pubsub_queue,
-                                               data_type=data_type,
-                                               data={'_id': item['_id'], 'term': term, 'success': success})
+                message_broker = MessageBroker(channel_name=MessageBroker.Channels.CONSENSUS_TO_RPC)
+                success = message_broker.produce(data_type=data_type, data={'_id': item['_id'], 'term': term,
+                                                                            'success': success})
                 if not success:
                     logging.error('[Exception|start]: Failed to produce by consensus')
                     continue
@@ -115,9 +114,9 @@ class Consensus:
                     last_log_index=item['last_log_index'],
                     last_log_term=item['last_log_term']
                 )
-                success = produce_by_consensus(queue=pubsub_queue,
-                                               data_type=data_type,
-                                               data={'_id': item['_id'], 'term': term, 'granted': granted})
+                message_broker = MessageBroker(channel_name=MessageBroker.Channels.CONSENSUS_TO_RPC)
+                success = message_broker.produce(data_type=data_type, data={'_id': item['_id'], 'term': term,
+                                                                            'granted': granted})
                 if not success:
                     logging.error('[Exception|start]: Failed to produce by consensus')
                     continue
@@ -127,11 +126,9 @@ class Consensus:
                 if not success:
                     logging.error('[Exception|start]: Failed to run the log command')
                     continue
-
-                produced_successfully = produce_by_consensus(queue=pubsub_queue,
-                                                             data_type=data_type,
-                                                             data={'_id': item['_id'],
-                                                                   'success': success})
+                message_broker = MessageBroker(channel_name=MessageBroker.Channels.CONSENSUS_TO_REQUEST)
+                produced_successfully = message_broker.produce(data_type=data_type, data={'_id': item['_id'],
+                                                                                          'success': success})
                 if not produced_successfully:
                     logging.error('[Exception|produce_by_consensus_to_request_rpc]: Failed to produce to request rpc')
                     continue
