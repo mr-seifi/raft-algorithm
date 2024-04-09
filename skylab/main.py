@@ -11,11 +11,6 @@ import logging
 def main():
     Config.load()
 
-    logging.basicConfig(level=getattr(logging, Config.logging_level()),
-                        filename=Config.logging_filename(),
-                        filemode="a",
-                        format="%(asctime)s-%(levelname)s-%(message)s", )
-
     parser = argparse.ArgumentParser(
         prog='Skylab',
         description='Reach consensus on everything',
@@ -27,8 +22,6 @@ def main():
     parser.add_argument('-a', '--run-consensus', action='store_true')
     args = parser.parse_args()
 
-    logging.info("-> SKYLAB STARTED")
-
     if args.compile_proto:
         os.chdir("skylab/rpc/config")
         for proto_file in Config.proto_files():
@@ -36,14 +29,29 @@ def main():
                 break
             compile_proto(proto_file)
     if args.run_consensus_server:
+        logging.basicConfig(level=getattr(logging, Config.logging_level()),
+                            filename=Config.logging_filename(),
+                            filemode="a",
+                            format="%(asctime)s - %(levelname)s - CONSENSUS_SERVER - %(message)s", )
+        logging.info("-> SKYLAB STARTED")
         serve_consensus(host=Config.grpc_consensus_server_host(),
                         port=str(Config.grpc_consensus_server_port()),
                         max_workers=10)
     if args.run_request_server:
+        logging.basicConfig(level=getattr(logging, Config.logging_level()),
+                            filename=Config.logging_filename(),
+                            filemode="a",
+                            format="%(asctime)s - %(levelname)s - REQUEST_SERVER - %(message)s", )
+        logging.info("-> SKYLAB STARTED")
         serve_request(host=Config.grpc_request_server_host(),
                       port=str(Config.grpc_request_server_port()),
                       max_workers=10)
     if args.run_consensus:
+        logging.basicConfig(level=getattr(logging, Config.logging_level()),
+                            filename=Config.logging_filename(),
+                            filemode="a",
+                            format="%(asctime)s - %(levelname)s - CONSENSUS_PROTOCOL - %(message)s", )
+        logging.info("-> SKYLAB STARTED")
         pubsub_queue = PubSubQueue()
         consumer_by_consensus = threading.Thread(target=consume_by_consensus, args=(pubsub_queue,))
         consumer_by_rpc = threading.Thread(target=consume_by_rpc, args=(pubsub_queue,))
