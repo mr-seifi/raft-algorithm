@@ -61,9 +61,9 @@ def main():
         rpc_message_broker = MessageBroker(channel_name=MessageBroker.Channels.RPC_TO_CONSENSUS)
         rpc_consumer = threading.Thread(target=rpc_message_broker.consume, args=())
         rpc_consumer.start()
-        request_message_broker = MessageBroker(channel_name=MessageBroker.Channels.REQUEST_TO_CONSENSUS)
-        request_consumer = threading.Thread(target=request_message_broker.consume, args=())
-        request_consumer.start()
+        # request_message_broker = MessageBroker(channel_name=MessageBroker.Channels.REQUEST_TO_CONSENSUS)
+        # request_consumer = threading.Thread(target=request_message_broker.consume, args=())
+        # request_consumer.start()
         consensus_service = Consensus()
         consensus_service.start()
 
