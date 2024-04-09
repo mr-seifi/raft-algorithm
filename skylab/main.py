@@ -34,9 +34,6 @@ def main():
                             filemode="a",
                             format="%(asctime)s - %(levelname)s - CONSENSUS_SERVER - %(message)s", )
         logging.info("-> SKYLAB STARTED")
-        pubsub_queue = PubSubQueue()
-        consumer_by_consensus = threading.Thread(target=consume_by_consensus, args=(pubsub_queue,))
-        consumer_by_consensus.start()
         serve_consensus(host=Config.grpc_consensus_server_host(),
                         port=str(Config.grpc_consensus_server_port()),
                         max_workers=10)
@@ -58,6 +55,9 @@ def main():
                             filemode="a",
                             format="%(asctime)s - %(levelname)s - CONSENSUS_PROTOCOL - %(message)s", )
         logging.info("-> SKYLAB STARTED")
+        pubsub_queue = PubSubQueue()
+        consumer_by_consensus = threading.Thread(target=consume_by_consensus, args=(pubsub_queue,))
+        consumer_by_consensus.start()
         consensus_service = Consensus()
         consensus_service.start()
 

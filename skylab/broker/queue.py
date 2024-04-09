@@ -1,5 +1,5 @@
 import logging
-
+from enum import Enum
 import redis
 import threading
 from skylab.app.config import Config
@@ -24,47 +24,51 @@ class PubSubQueue:
     def _listen(self, callback):
         for message in self.pubsub.listen():
             if message['type'] == 'message':
-                data_type, data = _decode(message['data'].decode())
+                data_type, data = MessageBroker._decode(message['data'].decode())
                 callback(data_type, data)
 
 
-def produce_by_rpc(queue: PubSubQueue, data_type: str, data: dict) -> bool:
-    try:
-        encoded_message = _encode(data_type, **data)
-        queue.publish(channel_name='rpc_to_consensus', item=encoded_message)
-        return True
-    except Exception as e:
-        logging.exception('[Exception|produce_by_rpc]')
-        return False
+class MessageBroker:
+    class Channels(Enum):
+        RPC_TO_CONSENSUS = 1
+        CONSENSUS_TO_RPC = 2
+        REQUEST_TO_CONSENSUS = 3
+        CONSENSUS_TO_REQUEST = 4
 
+    def __init__(self, channel_name: Channels):
+        self._channel_names = {
+            1: ('rpc_to_consensus', _callback_rpc_to_consensus),
+            2: ('consensus_to_rpc', _callback_consensus_to_rpc),
+            3: ('request_to_consensus', _callback_request_to_consensus),
+            4: ('consensus_to_request', _callback_consensus_to_request)
+        }
 
-def consume_by_consensus(queue: PubSubQueue):
-    queue.subscribe(channel_name='rpc_to_consensus', callback=_callback_rpc_to_consensus)
+        self.queue = PubSubQueue()
+        self.channel_name = self._channel_names[channel_name.value][0]
+        self.callback = self._channel_names[channel_name.value][1]
 
+    def produce(self, data_type: str, data: dict):
+        try:
+            encoded_message = self._encode(data_type, **data)
+            self.queue.publish(channel_name=self.channel_name, item=encoded_message)
+            return True
+        except Exception as e:
+            logging.exception(f'[Exception|{self.channel_name}]')
+            return False
 
-def produce_by_consensus(queue: PubSubQueue, data_type: str, data: dict):
-    try:
-        encoded_message = _encode(data_type, **data)
-        queue.publish(channel_name='consensus_to_rpc', item=encoded_message)
-        return True
-    except Exception as e:
-        logging.exception('[Exception|produce_by_consensus]')
-        return False
+    def consume(self):
+        self.queue.subscribe(channel_name=self.channel_name, callback=self.callback)
 
+    @staticmethod
+    def _encode(data_type: str, **kwargs) -> str:
+        kwargs['_data_type'] = data_type
+        return json.dumps(kwargs)
 
-def consume_by_rpc(queue: PubSubQueue):
-    queue.subscribe(channel_name='consensus_to_rpc', callback=_callback_consensus_to_rpc)
-
-
-def _encode(data_type: str, **kwargs) -> str:
-    kwargs['_data_type'] = data_type
-    return json.dumps(kwargs)
-
-
-def _decode(encoded_message: str) -> (str, dict):
-    message = json.loads(encoded_message)
-    data_type = message['_data_type']
-    return data_type, message
+    @staticmethod
+    def _decode(encoded_message: str) -> (str, dict):
+        message = json.loads(encoded_message)
+        data_type = message['_data_type']
+        return data_type, message
 
 
 def _callback_rpc_to_consensus(_: str, item: dict):
@@ -73,11 +77,21 @@ def _callback_rpc_to_consensus(_: str, item: dict):
 
 
 def _callback_consensus_to_rpc(data_type: str, item: dict):
-    from skylab.rpc.server import Consensus, Request
+    from skylab.rpc.server import Consensus
     _id = item.pop('_id')
     if data_type == 'append_entries':
         Consensus.append_entries_messages[_id] = item
     elif data_type == 'request_vote':
         Consensus.request_vote_messages[_id] = item
-    elif data_type == 'add_log_request':
+
+
+def _callback_request_to_consensus(_: str, item: dict):
+    from skylab.consensus.consensus import Consensus
+    Consensus.Q.put(item)
+
+
+def _callback_consensus_to_request(data_type: str, item: dict):
+    from skylab.rpc.server import Request
+    _id = item.pop('_id')
+    if data_type == 'add_log_request':
         Request.requests[_id] = item
