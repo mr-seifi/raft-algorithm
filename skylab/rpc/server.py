@@ -114,7 +114,7 @@ class Request(consensus_pb2_grpc.RequestServicer):
         return consensus_pb2.HelloResponse(message=f"Hello, {request.name}")
 
     def AddLog(self, request, context):
-        message_broker = MessageBroker(channel_name=MessageBroker.Channels.REQUEST_TO_CONSENSUS)
+        message_broker = MessageBroker(channel_name=MessageBroker.Channels.RPC_TO_CONSENSUS)
         _random_id = uuid4().hex
         data = {'_id': _random_id,
                 'log': {'log_term': request.log.logTerm,

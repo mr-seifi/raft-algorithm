@@ -30,16 +30,16 @@ class PubSubQueue:
 
 class MessageBroker:
     class Channels(Enum):
-        RPC_TO_CONSENSUS = 1
+        RPC_TO_CONSENSUS = 1  # Also REQUEST_TO_CONSENSUS
         CONSENSUS_TO_RPC = 2
-        REQUEST_TO_CONSENSUS = 3
+        # REQUEST_TO_CONSENSUS = 3
         CONSENSUS_TO_REQUEST = 4
 
     def __init__(self, channel_name: Channels):
         self._channel_names = {
             1: ('rpc_to_consensus', _callback_rpc_to_consensus),
             2: ('consensus_to_rpc', _callback_consensus_to_rpc),
-            3: ('request_to_consensus', _callback_request_to_consensus),
+            # 3: ('request_to_consensus', _callback_request_to_consensus),
             4: ('consensus_to_request', _callback_consensus_to_request)
         }
 
