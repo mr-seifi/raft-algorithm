@@ -255,6 +255,7 @@ class LeaderState(State):
         log = Log(term=log['log_term'], command=log['command'])
         self.consensus_service.log.append(log)
 
+        self.consensus_service.last_applied += 1
         log.exec()
         return True
 
