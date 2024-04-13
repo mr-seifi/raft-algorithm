@@ -172,7 +172,7 @@ class CandidateState(State):
         return self.consensus_service.current_term, False
 
     def handle_request(self, log):
-        ...
+        return True
 
     def run(self):  # Start Election
         self.consensus_service.current_term += 1
@@ -252,7 +252,7 @@ class LeaderState(State):
         return self.consensus_service.current_term, False
 
     def handle_request(self, log: dict) -> bool:
-        log = Log(term=log['term'], command=log['command'])
+        log = Log(term=log['log_term'], command=log['command'])
         self.consensus_service.log.append(log)
 
         log.exec()
