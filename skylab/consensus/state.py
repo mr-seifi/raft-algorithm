@@ -65,13 +65,6 @@ class FollowerState(State):
             self.consensus_service.state = FollowerState(consensus_service=self.consensus_service)
             return self.consensus_service.current_term, True
 
-        # TODO: Check the first condition
-        if len(self.consensus_service.log) - 1 < prev_log_index:
-            return self.consensus_service.current_term, False
-
-        if self.consensus_service.log and (self.consensus_service.log[prev_log_index].term != prev_log_term):
-            self.consensus_service.log = self.consensus_service.log[:prev_log_index]
-
         # TODO: Check not to be in logs
         # TODO: Check exec that should be last - 1 or last
         for entry in entries:
@@ -80,6 +73,13 @@ class FollowerState(State):
 
             log.exec()
             self.consensus_service.last_applied += 1
+
+        # TODO: Check the first condition
+        if len(self.consensus_service.log) - 1 < prev_log_index:
+            return self.consensus_service.current_term, False
+
+        if self.consensus_service.log and (self.consensus_service.log[prev_log_index].term != prev_log_term):
+            self.consensus_service.log = self.consensus_service.log[:prev_log_index]
 
         if leader_commit > self.consensus_service.commit_index:
             self.consensus_service.commit_index = min(leader_commit, len(self.consensus_service.log) - 1)
@@ -291,8 +291,8 @@ class LeaderState(State):
                 if success:
                     self.consensus_service.match_index[node_index] = self.consensus_service.next_index[node_index]
                     self.consensus_service.next_index[node_index] += 1
-                else:
-                    self.consensus_service.next_index[node_index] -= 1
+                # else:
+                #     self.consensus_service.next_index[node_index] -= 1
 
         if len(self.consensus_service.log) > self.consensus_service.commit_index:
             majority_match_indices = 0
