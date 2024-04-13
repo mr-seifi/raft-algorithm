@@ -13,6 +13,6 @@ class Log:
 
 def decode_log(log: dict) -> Log:
     return Log(
-        term=log['term'],
+        term=log.get('term') or log['log_term'],
         command=log['command']
     )
