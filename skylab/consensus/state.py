@@ -4,6 +4,7 @@ from random import randint
 from skylab.app.config import Config
 from skylab.consensus.consensus import Consensus
 from skylab.consensus.log import Log
+from skylab.rpc.config import consensus_pb2
 from skylab.rpc.client import Client
 
 
@@ -278,7 +279,8 @@ class LeaderState(State):
                     leader_id=self.consensus_service.id,
                     prev_log_index=self.consensus_service.last_applied,
                     prev_log_term=self.consensus_service.log[-1].term if self.consensus_service.log else 0,
-                    entries=[self.consensus_service.log[self.consensus_service.next_index[node_index]]],  # TODO: [
+                    entries=[consensus_pb2.Log(logTerm=self.consensus_service.log[self.consensus_service.next_index[node_index]]['term'],
+                                               command=self.consensus_service.log[self.consensus_service.next_index[node_index]]['command'])],  # TODO: [
                     # EFF] Can send batch batch
                     leader_commit=self.consensus_service.commit_index
                 )
