@@ -120,7 +120,9 @@ class Request(consensus_pb2_grpc.RequestServicer):
                 'log': {'log_term': request.log.logTerm,
                         'command': request.log.command}}
 
-        success = message_broker.produce(data_type='add_log_request', data=data)
+        logging.info(f"Received AddLogRequest: [{data.items()}]")
+        success = message_broker.produce(data_type='add_log_request',
+                                         data=data)
         if not success:
             # logging.error('[Exception|AddLog]: Failed to produce by rpc')
             # context.set_code(grpc.StatusCode.CANCELLED)
@@ -140,7 +142,7 @@ class Request(consensus_pb2_grpc.RequestServicer):
                 break
             time.sleep(0.01)
 
-        logging.info(f"Respond Request: [{_random_id}] "
+        logging.info(f"Respond AddLogRequest: [{_random_id}] "
                      f"(success, {response.get('success')})")
         return consensus_pb2.AddLogResponse(success=response.get('success'),
                                             response=response.get('response'))

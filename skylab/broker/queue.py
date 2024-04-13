@@ -92,6 +92,8 @@ def _callback_request_to_consensus(_: str, item: dict):
 
 def _callback_consensus_to_request(data_type: str, item: dict):
     from skylab.rpc.server import Request
+    logging.info("FROM CALLBACK CONSENSUS TO RPC")
     _id = item.pop('_id')
     if data_type == 'add_log_request':
+        logging.info(f"GOT THE ITEM: {_id}: {item}")
         Request.requests[_id] = item
