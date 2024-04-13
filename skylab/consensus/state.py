@@ -1,3 +1,4 @@
+import logging
 import signal
 import threading
 from random import randint
@@ -69,6 +70,7 @@ class FollowerState(State):
         # TODO: Check not to be in logs
         # TODO: Check exec that should be last - 1 or last
         for entry in entries:
+            logging.warning(entry)
             log = decode_log(entry)
             self.consensus_service.log.append(log)
 
