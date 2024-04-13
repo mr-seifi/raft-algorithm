@@ -3,7 +3,7 @@ import threading
 from random import randint
 from skylab.app.config import Config
 from skylab.consensus.consensus import Consensus
-from skylab.consensus.log import Log
+from skylab.consensus.log import Log, decode_log
 from skylab.rpc.config import consensus_pb2
 from skylab.rpc.client import Client
 
@@ -69,7 +69,7 @@ class FollowerState(State):
         # TODO: Check not to be in logs
         # TODO: Check exec that should be last - 1 or last
         for entry in entries:
-            log = Log(term=entry.logTerm, command=entry.command)
+            log = decode_log(entry)
             self.consensus_service.log.append(log)
 
             log.exec()
