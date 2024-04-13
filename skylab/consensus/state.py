@@ -279,8 +279,8 @@ class LeaderState(State):
                     leader_id=self.consensus_service.id,
                     prev_log_index=self.consensus_service.last_applied,
                     prev_log_term=self.consensus_service.log[-1].term if self.consensus_service.log else 0,
-                    entries=[consensus_pb2.Log(logTerm=self.consensus_service.log[self.consensus_service.next_index[node_index]]['term'],
-                                               command=self.consensus_service.log[self.consensus_service.next_index[node_index]]['command'])],  # TODO: [
+                    entries=[consensus_pb2.Log(logTerm=self.consensus_service.log[self.consensus_service.next_index[node_index]].term,
+                                               command=self.consensus_service.log[self.consensus_service.next_index[node_index]].command)],  # TODO: [
                     # EFF] Can send batch batch
                     leader_commit=self.consensus_service.commit_index
                 )
