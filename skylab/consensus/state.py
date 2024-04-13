@@ -110,7 +110,7 @@ class FollowerState(State):
 
     def handle_request(self, log):
         # TODO: Forward it to leader
-        ...
+        return True
 
     def run(self):
         self.reset_timer()
