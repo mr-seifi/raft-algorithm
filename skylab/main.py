@@ -1,6 +1,6 @@
 import argparse
 from skylab.app import Config
-from skylab.rpc import compile_proto, serve_consensus, serve_request
+from skylab.rpc import compile_proto, serve_consensus, serve_node
 from skylab.broker import MessageBroker
 from skylab.consensus.consensus import Consensus
 import threading
@@ -49,9 +49,9 @@ def main():
         message_broker = MessageBroker(channel_name=MessageBroker.Channels.CONSENSUS_TO_REQUEST)
         consumer = threading.Thread(target=message_broker.consume, args=())
         consumer.start()
-        serve_request(host=Config.grpc_request_server_host(),
-                      port=str(Config.grpc_request_server_port()),
-                      max_workers=10)
+        serve_node(host=Config.grpc_request_server_host(),
+                   port=str(Config.grpc_request_server_port()),
+                   max_workers=10)
     if args.run_consensus:
         logging.basicConfig(level=getattr(logging, Config.logging_level()),
                             filename=Config.logging_filename(),

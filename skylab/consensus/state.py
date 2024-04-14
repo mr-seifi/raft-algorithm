@@ -62,6 +62,7 @@ class FollowerState(State):
         if term < self.consensus_service.current_term:
             return self.consensus_service.current_term, False
 
+        self.consensus_service.current_leader = leader_id
         if term > self.consensus_service.current_term:
             self.consensus_service.current_term = term
             self.consensus_service.state = FollowerState(consensus_service=self.consensus_service)
@@ -110,9 +111,12 @@ class FollowerState(State):
 
         return self.consensus_service.current_term, False
 
-    def handle_request(self, log):
-        # TODO: Forward it to leader
-        return True
+    def handle_request(self, log: dict) -> bool:
+        client = Client()
+        success = client.forward_add_log_request(node_id=self.consensus_service.current_leader,
+                                                 log=consensus_pb2.Log(logTerm=log['log_term'],
+                                                                       command=log['command']))
+        return success
 
     def run(self):
         self.reset_timer()
@@ -147,6 +151,7 @@ class CandidateState(State):
 
         if term > self.consensus_service.current_term:
             self.consensus_service.current_term = term
+            self.consensus_service.current_leader = leader_id
             self.consensus_service.state = FollowerState(consensus_service=self.consensus_service)
             return self.consensus_service.current_term, True
 
@@ -173,7 +178,7 @@ class CandidateState(State):
 
         return self.consensus_service.current_term, False
 
-    def handle_request(self, log):
+    def handle_request(self, log) -> bool:
         return True
 
     def run(self):  # Start Election
@@ -204,6 +209,7 @@ class CandidateState(State):
 class LeaderState(State):
     def __init__(self, consensus_service: Consensus):
         super().__init__(consensus_service=consensus_service)
+        self.consensus_service.current_leader = self.consensus_service.id
 
     def set_timer(self):
         delta = Config.heartbeat_delta()
@@ -280,8 +286,10 @@ class LeaderState(State):
                     leader_id=self.consensus_service.id,
                     prev_log_index=self.consensus_service.last_applied,
                     prev_log_term=self.consensus_service.log[-1].term if self.consensus_service.log else 0,
-                    entries=[consensus_pb2.Log(logTerm=self.consensus_service.log[self.consensus_service.next_index[node_index]].term,
-                                               command=self.consensus_service.log[self.consensus_service.next_index[node_index]].command)],  # TODO: [
+                    entries=[consensus_pb2.Log(
+                        logTerm=self.consensus_service.log[self.consensus_service.next_index[node_index]].term,
+                        command=self.consensus_service.log[self.consensus_service.next_index[node_index]].command)],
+                    # TODO: [
                     # EFF] Can send batch batch
                     leader_commit=self.consensus_service.commit_index
                 )

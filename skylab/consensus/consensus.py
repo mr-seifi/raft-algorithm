@@ -4,6 +4,7 @@ from skylab.app.config import Config
 from skylab.broker import MessageBroker
 from skylab.storage.mongo import MongoService
 from skylab.consensus.log import decode_log
+from skylab.rpc.client import Client
 from queue import Queue
 
 
@@ -13,7 +14,7 @@ class Consensus:
     Q = Queue()
 
     def __init__(self, current_term=0, voted_for=None, log=[],
-                 commit_index=-1, last_applied=-1,
+                 commit_index=-1, last_applied=-1, current_leader=-1,
                  next_index=[], match_index=[]):
         from skylab.consensus.state import FollowerState
 
@@ -22,6 +23,7 @@ class Consensus:
         self.voted_for = voted_for
         self.log = log
         self.commit_index = commit_index
+        self.current_leader = current_leader
         self.last_applied = last_applied
 
         # Initialized to leader
@@ -34,7 +36,8 @@ class Consensus:
         mongo_service = MongoService.obtain()
         mongo_service.store_configuration(current_term=self.current_term, voted_for=self.voted_for,
                                           commit_index=self.commit_index, last_applied=self.last_applied,
-                                          next_index=self.next_index, match_index=self.match_index)
+                                          current_leader=self.current_leader, next_index=self.next_index,
+                                          match_index=self.match_index)
         mongo_service.store_logs(logs=[log.encode() for log in self.log])
 
     def load(self):
@@ -47,6 +50,7 @@ class Consensus:
         self.voted_for = configuration['voted_for']
         self.commit_index = configuration['commit_index']
         self.last_applied = configuration['last_applied']
+        self.current_leader = configuration['current_leader']
         self.next_index = configuration['next_index']
         self.match_index = configuration['match_index']
         self.log = [decode_log(log) for log in logs]
@@ -123,6 +127,19 @@ class Consensus:
 
             elif data_type == "add_log_request":
                 success = self.request(log=item['log'])
+                if not success:
+                    logging.error('[Exception|start]: Failed to run the log command')
+                    continue
+                message_broker = MessageBroker(channel_name=MessageBroker.Channels.CONSENSUS_TO_REQUEST)
+                produced_successfully = message_broker.produce(data_type=data_type, data={'_id': item['_id'],
+                                                                                          'success': success})
+                if not produced_successfully:
+                    logging.error('[Exception|produce_by_consensus_to_request_rpc]: Failed to produce to request rpc')
+                    continue
+
+            elif data_type == "node_request":
+                success = self.request(log={'log_term': item['log_term'],
+                                            'command': item['command']})
                 if not success:
                     logging.error('[Exception|start]: Failed to run the log command')
                     continue

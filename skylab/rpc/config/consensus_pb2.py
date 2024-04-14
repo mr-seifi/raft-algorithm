@@ -14,7 +14,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0f\x63onsensus.proto\x12\tconsensus\"\x1c\n\x0cHelloRequest\x12\x0c\n\x04name\x18\x01 \x01(\t\" \n\rHelloResponse\x12\x0f\n\x07message\x18\x01 \x01(\t\"\'\n\x03Log\x12\x0f\n\x07logTerm\x18\x01 \x01(\x03\x12\x0f\n\x07\x63ommand\x18\x02 \x01(\t\"\x98\x01\n\x14\x41ppendEntriesRequest\x12\x0c\n\x04term\x18\x01 \x01(\x05\x12\x10\n\x08leaderId\x18\x02 \x01(\x05\x12\x14\n\x0cprevLogIndex\x18\x03 \x01(\x03\x12\x13\n\x0bprevLogTerm\x18\x04 \x01(\x05\x12\x1f\n\x07\x65ntries\x18\x05 \x03(\x0b\x32\x0e.consensus.Log\x12\x14\n\x0cleaderCommit\x18\x06 \x01(\x03\"6\n\x15\x41ppendEntriesResponse\x12\x0c\n\x04term\x18\x01 \x01(\x05\x12\x0f\n\x07success\x18\x02 \x01(\x08\"b\n\x12RequestVoteRequest\x12\x0c\n\x04term\x18\x01 \x01(\x05\x12\x13\n\x0b\x63\x61ndidateId\x18\x02 \x01(\x05\x12\x14\n\x0clastLogIndex\x18\x03 \x01(\x05\x12\x13\n\x0blastLogTerm\x18\x04 \x01(\x05\"4\n\x13RequestVoteResponse\x12\x0c\n\x04term\x18\x01 \x01(\x05\x12\x0f\n\x07granted\x18\x02 \x01(\x08\",\n\rAddLogRequest\x12\x1b\n\x03log\x18\x01 \x01(\x0b\x32\x0e.consensus.Log\"3\n\x0e\x41\x64\x64LogResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x10\n\x08response\x18\x02 \x01(\t2\xf2\x01\n\tConsensus\x12?\n\x08SayHello\x12\x17.consensus.HelloRequest\x1a\x18.consensus.HelloResponse\"\x00\x12T\n\rAppendEntries\x12\x1f.consensus.AppendEntriesRequest\x1a .consensus.AppendEntriesResponse\"\x00\x12N\n\x0bRequestVote\x12\x1d.consensus.RequestVoteRequest\x1a\x1e.consensus.RequestVoteResponse\"\x00\x32\x8b\x01\n\x07Request\x12?\n\x08SayHello\x12\x17.consensus.HelloRequest\x1a\x18.consensus.HelloResponse\"\x00\x12?\n\x06\x41\x64\x64Log\x12\x18.consensus.AddLogRequest\x1a\x19.consensus.AddLogResponse\"\x00\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0f\x63onsensus.proto\x12\tconsensus\"\x1c\n\x0cHelloRequest\x12\x0c\n\x04name\x18\x01 \x01(\t\" \n\rHelloResponse\x12\x0f\n\x07message\x18\x01 \x01(\t\"\'\n\x03Log\x12\x0f\n\x07logTerm\x18\x01 \x01(\x03\x12\x0f\n\x07\x63ommand\x18\x02 \x01(\t\"\x98\x01\n\x14\x41ppendEntriesRequest\x12\x0c\n\x04term\x18\x01 \x01(\x05\x12\x10\n\x08leaderId\x18\x02 \x01(\x05\x12\x14\n\x0cprevLogIndex\x18\x03 \x01(\x03\x12\x13\n\x0bprevLogTerm\x18\x04 \x01(\x05\x12\x1f\n\x07\x65ntries\x18\x05 \x03(\x0b\x32\x0e.consensus.Log\x12\x14\n\x0cleaderCommit\x18\x06 \x01(\x03\"6\n\x15\x41ppendEntriesResponse\x12\x0c\n\x04term\x18\x01 \x01(\x05\x12\x0f\n\x07success\x18\x02 \x01(\x08\"b\n\x12RequestVoteRequest\x12\x0c\n\x04term\x18\x01 \x01(\x05\x12\x13\n\x0b\x63\x61ndidateId\x18\x02 \x01(\x05\x12\x14\n\x0clastLogIndex\x18\x03 \x01(\x05\x12\x13\n\x0blastLogTerm\x18\x04 \x01(\x05\"4\n\x13RequestVoteResponse\x12\x0c\n\x04term\x18\x01 \x01(\x05\x12\x0f\n\x07granted\x18\x02 \x01(\x08\",\n\rAddLogRequest\x12\x1b\n\x03log\x18\x01 \x01(\x0b\x32\x0e.consensus.Log\"3\n\x0e\x41\x64\x64LogResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x10\n\x08response\x18\x02 \x01(\t\"\x1e\n\x0bNodeRequest\x12\x0f\n\x07\x63ommand\x18\x01 \x01(\t\"1\n\x0cNodeResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x10\n\x08response\x18\x02 \x01(\t2\xb3\x02\n\tConsensus\x12?\n\x08SayHello\x12\x17.consensus.HelloRequest\x1a\x18.consensus.HelloResponse\"\x00\x12T\n\rAppendEntries\x12\x1f.consensus.AppendEntriesRequest\x1a .consensus.AppendEntriesResponse\"\x00\x12N\n\x0bRequestVote\x12\x1d.consensus.RequestVoteRequest\x1a\x1e.consensus.RequestVoteResponse\"\x00\x12?\n\x06\x41\x64\x64Log\x12\x18.consensus.AddLogRequest\x1a\x19.consensus.AddLogResponse\"\x00\x32\x85\x01\n\x04Node\x12?\n\x08SayHello\x12\x17.consensus.HelloRequest\x1a\x18.consensus.HelloResponse\"\x00\x12<\n\x07Request\x12\x16.consensus.NodeRequest\x1a\x17.consensus.NodeResponse\"\x00\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -39,8 +39,12 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   _globals['_ADDLOGREQUEST']._serialized_end=544
   _globals['_ADDLOGRESPONSE']._serialized_start=546
   _globals['_ADDLOGRESPONSE']._serialized_end=597
-  _globals['_CONSENSUS']._serialized_start=600
-  _globals['_CONSENSUS']._serialized_end=842
-  _globals['_REQUEST']._serialized_start=845
-  _globals['_REQUEST']._serialized_end=984
+  _globals['_NODEREQUEST']._serialized_start=599
+  _globals['_NODEREQUEST']._serialized_end=629
+  _globals['_NODERESPONSE']._serialized_start=631
+  _globals['_NODERESPONSE']._serialized_end=680
+  _globals['_CONSENSUS']._serialized_start=683
+  _globals['_CONSENSUS']._serialized_end=990
+  _globals['_NODE']._serialized_start=993
+  _globals['_NODE']._serialized_end=1126
 # @@protoc_insertion_point(module_scope)

@@ -6,6 +6,7 @@ service Consensus {
   rpc SayHello (HelloRequest) returns (HelloResponse) {}
   rpc AppendEntries (AppendEntriesRequest) returns (AppendEntriesResponse) {}
   rpc RequestVote (RequestVoteRequest) returns (RequestVoteResponse) {}
+  rpc AddLog (AddLogRequest) returns (AddLogResponse) {}
 }
 
 message HelloRequest {
@@ -47,17 +48,26 @@ message RequestVoteResponse {
   bool granted = 2;
 }
 
-
-service Request {
-  rpc SayHello (HelloRequest) returns (HelloResponse) {}
-  rpc AddLog (AddLogRequest) returns (AddLogResponse) {}
-}
-
 message AddLogRequest {
   Log log = 1;
 }
 
 message AddLogResponse {
+  bool success = 1;
+  string response = 2;
+}
+
+
+service Node {
+  rpc SayHello (HelloRequest) returns (HelloResponse) {}
+  rpc Request (NodeRequest) returns (NodeResponse) {}
+}
+
+message NodeRequest {
+  string command = 1;
+}
+
+message NodeResponse {
   bool success = 1;
   string response = 2;
 }

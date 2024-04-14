@@ -8,6 +8,12 @@ class Client:
     def __init__(self):
         self.base_url = f"{Config.grpc_consensus_server_host()}:{Config.grpc_consensus_server_port()}"
         self.trusted_nodes = Config.trusted_nodes()
+        self.node_id_to_url = {
+            Config.node_id(): self.base_url,
+            **{
+                int(node[-1]): node for node in self.trusted_nodes
+            }
+        }
 
     def _request(self, base_url: str, stub: str, rpc: str, request: str, arguments: dict):
         with grpc.insecure_channel(base_url) as channel:
@@ -80,9 +86,21 @@ class Client:
 
     def add_log_request(self, base_url: str, log: consensus_pb2.Log) -> (int, bool):
         response = self._request(base_url=base_url,
-                                 stub='Request',
+                                 stub='Consensus',
                                  rpc='AddLog',
                                  request='AddLogRequest',
                                  arguments={'log': log})
+
+        return response.success, response.response
+
+    def forward_add_log_request(self, node_id: int, log: consensus_pb2.Log) -> (int, bool):
+        return self.add_log_request(base_url=self.node_id_to_url.get(node_id, 1), log=log)
+
+    def node_request(self, base_url: str, command: str) -> (int, bool):
+        response = self._request(base_url=base_url,
+                                 stub='Node',
+                                 rpc='Request',
+                                 request='NodeRequest',
+                                 arguments={'command': command})
 
         return response.success, response.response

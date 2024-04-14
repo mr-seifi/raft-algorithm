@@ -106,13 +106,6 @@ class Consensus(consensus_pb2_grpc.ConsensusServicer):
                      f"(term, {response.get('term')}), (granted, {response.get('granted')})")
         return consensus_pb2.RequestVoteResponse(term=response.get('term'), granted=response.get('granted'))
 
-
-class Request(consensus_pb2_grpc.RequestServicer):
-    requests = {}
-
-    def SayHello(self, request, context):
-        return consensus_pb2.HelloResponse(message=f"Hello, {request.name}")
-
     def AddLog(self, request, context):
         message_broker = MessageBroker(channel_name=MessageBroker.Channels.RPC_TO_CONSENSUS)
         _random_id = uuid4().hex
@@ -124,19 +117,14 @@ class Request(consensus_pb2_grpc.RequestServicer):
         success = message_broker.produce(data_type='add_log_request',
                                          data=data)
         if not success:
-            # logging.error('[Exception|AddLog]: Failed to produce by rpc')
-            # context.set_code(grpc.StatusCode.CANCELLED)
-            # context.set_details("Bad request!")
-            # return context, None
             return consensus_pb2.AddLogResponse(success=False,
                                                 response="")
-
 
         response = {}
         timeout = time.time() + 60
         while True:
-            if Request.requests.get(_random_id):
-                response = Request.requests.pop(_random_id)
+            if Node.requests.get(_random_id):
+                response = Node.requests.pop(_random_id)
                 break
             if time.time() > timeout:
                 break
@@ -144,8 +132,43 @@ class Request(consensus_pb2_grpc.RequestServicer):
 
         logging.info(f"Respond AddLogRequest: [{_random_id}] "
                      f"(success, {response.get('success')})")
-        return consensus_pb2.AddLogResponse(success=response.get('success'),
-                                            response=response.get('response'))
+        return consensus_pb2.NodeResponse(success=response.get('success'),
+                                          response=response.get('response'))
+
+
+class Node(consensus_pb2_grpc.NodeServicer):
+    requests = {}
+
+    def SayHello(self, request, context):
+        return consensus_pb2.HelloResponse(message=f"Hello, {request.name}")
+
+    def Request(self, request, context):
+        message_broker = MessageBroker(channel_name=MessageBroker.Channels.RPC_TO_CONSENSUS)
+        _random_id = uuid4().hex
+        data = {'_id': _random_id,
+                'command': request.command}
+
+        logging.info(f"Received NodeRequest: [{data.items()}]")
+        success = message_broker.produce(data_type='node_request',
+                                         data=data)
+        if not success:
+            return consensus_pb2.NodeResponse(success=False,
+                                              response="")
+
+        response = {}
+        timeout = time.time() + 60
+        while True:
+            if Node.requests.get(_random_id):
+                response = Node.requests.pop(_random_id)
+                break
+            if time.time() > timeout:
+                break
+            time.sleep(0.01)
+
+        logging.info(f"Respond NodeRequest: [{_random_id}] "
+                     f"(success, {response.get('success')})")
+        return consensus_pb2.NodeResponse(success=response.get('success'),
+                                          response=response.get('response'))
 
 
 def serve_consensus(host: str, port: str, max_workers: int):
@@ -156,9 +179,10 @@ def serve_consensus(host: str, port: str, max_workers: int):
     print("Server started, listening on " + port)
     server.wait_for_termination()
 
-def serve_request(host: str, port: str, max_workers: int):
+
+def serve_node(host: str, port: str, max_workers: int):
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=max_workers))
-    consensus_pb2_grpc.add_RequestServicer_to_server(Request(), server)
+    consensus_pb2_grpc.add_NodeServicer_to_server(Node(), server)
     server.add_insecure_port(host + ":" + port)
     server.start()
     print("Server started, listening on " + port)

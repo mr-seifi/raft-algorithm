@@ -82,3 +82,17 @@ class AddLogResponse(_message.Message):
     success: bool
     response: str
     def __init__(self, success: bool = ..., response: _Optional[str] = ...) -> None: ...
+
+class NodeRequest(_message.Message):
+    __slots__ = ("command",)
+    COMMAND_FIELD_NUMBER: _ClassVar[int]
+    command: str
+    def __init__(self, command: _Optional[str] = ...) -> None: ...
+
+class NodeResponse(_message.Message):
+    __slots__ = ("success", "response")
+    SUCCESS_FIELD_NUMBER: _ClassVar[int]
+    RESPONSE_FIELD_NUMBER: _ClassVar[int]
+    success: bool
+    response: str
+    def __init__(self, success: bool = ..., response: _Optional[str] = ...) -> None: ...
