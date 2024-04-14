@@ -138,7 +138,7 @@ class Consensus:
                     continue
 
             elif data_type == "node_request":
-                success = self.request(log={'log_term': item['log_term'],
+                success = self.request(log={'log_term': self.current_term,
                                             'command': item['command']})
                 if not success:
                     logging.error('[Exception|start]: Failed to run the log command')
