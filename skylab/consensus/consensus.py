@@ -130,7 +130,7 @@ class Consensus:
                 if not success:
                     logging.error('[Exception|start]: Failed to run the log command')
                     continue
-                message_broker = MessageBroker(channel_name=MessageBroker.Channels.CONSENSUS_TO_REQUEST)
+                message_broker = MessageBroker(channel_name=MessageBroker.Channels.CONSENSUS_TO_RPC)
                 produced_successfully = message_broker.produce(data_type=data_type, data={'_id': item['_id'],
                                                                                           'success': success})
                 if not produced_successfully:

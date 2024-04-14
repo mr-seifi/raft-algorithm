@@ -83,6 +83,8 @@ def _callback_consensus_to_rpc(data_type: str, item: dict):
         Consensus.append_entries_messages[_id] = item
     elif data_type == 'request_vote':
         Consensus.request_vote_messages[_id] = item
+    elif data_type == 'add_log_request':
+        Consensus.add_log_messages[_id] = item
 
 
 def _callback_request_to_consensus(_: str, item: dict):
@@ -91,9 +93,7 @@ def _callback_request_to_consensus(_: str, item: dict):
 
 
 def _callback_consensus_to_request(data_type: str, item: dict):
-    from skylab.rpc.server import Request
-    logging.info("FROM CALLBACK CONSENSUS TO RPC")
+    from skylab.rpc.server import Node
     _id = item.pop('_id')
-    if data_type == 'add_log_request':
-        logging.info(f"GOT THE ITEM: {_id}: {item}")
-        Request.requests[_id] = item
+    if data_type == 'node_request':
+        Node.requests[_id] = item

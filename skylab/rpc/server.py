@@ -12,6 +12,7 @@ from uuid import uuid4
 class Consensus(consensus_pb2_grpc.ConsensusServicer):
     append_entries_messages = {}
     request_vote_messages = {}
+    add_log_messages = {}
     WHITELIST_REGEX = r'(?:10\.\d+\.\d+\.\d+)'
 
     def authorize(self, context):
@@ -127,8 +128,8 @@ class Consensus(consensus_pb2_grpc.ConsensusServicer):
         response = {}
         timeout = time.time() + 60
         while True:
-            if Node.requests.get(_random_id):
-                response = Node.requests.pop(_random_id)
+            if Consensus.add_log_messages.get(_random_id):
+                response = Consensus.add_log_messages.pop(_random_id)
                 break
             if time.time() > timeout:
                 break
