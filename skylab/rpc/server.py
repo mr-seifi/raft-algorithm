@@ -69,7 +69,6 @@ class Consensus(consensus_pb2_grpc.ConsensusServicer):
                                                    success=response.get('success'))
 
     def RequestVote(self, request, context):
-        ip_address = context.peer().split(':')[1]
         if not self.authorize(context=context):
             # context.set_code(grpc.StatusCode.PERMISSION_DENIED)
             # context.set_details("Access Denied!")
@@ -107,6 +106,11 @@ class Consensus(consensus_pb2_grpc.ConsensusServicer):
         return consensus_pb2.RequestVoteResponse(term=response.get('term'), granted=response.get('granted'))
 
     def AddLog(self, request, context):
+        if not self.authorize(context=context):
+            # context.set_code(grpc.StatusCode.PERMISSION_DENIED)
+            # context.set_details("Access Denied!")
+            # return context, None
+            return consensus_pb2.AddLogResponse(success=False, response="Authorization failure.")
         message_broker = MessageBroker(channel_name=MessageBroker.Channels.RPC_TO_CONSENSUS)
         _random_id = uuid4().hex
         data = {'_id': _random_id,
@@ -132,8 +136,8 @@ class Consensus(consensus_pb2_grpc.ConsensusServicer):
 
         logging.info(f"Respond AddLogRequest: [{_random_id}] "
                      f"(success, {response.get('success')})")
-        return consensus_pb2.NodeResponse(success=response.get('success'),
-                                          response=response.get('response'))
+        return consensus_pb2.AddLogResponse(success=response.get('success'),
+                                            response=response.get('response'))
 
 
 class Node(consensus_pb2_grpc.NodeServicer):
