@@ -75,7 +75,7 @@ class Consensus:
         return self.state.reply_vote_request(term=term, candidate_id=candidate_id, last_log_index=last_log_index,
                                              last_log_term=last_log_term)
 
-    def request(self, log):
+    def request(self, log) -> (bool, str):
         return self.state.handle_request(log=log)
 
     def run(self):
@@ -140,7 +140,7 @@ class Consensus:
 
             elif data_type == "node_request":
                 success, response = self.request(log={'log_term': self.current_term,
-                                            'command': item['command']})
+                                                      'command': item['command']})
                 if not success:
                     logging.error('[Exception|start]: Failed to run the log command')
                     continue

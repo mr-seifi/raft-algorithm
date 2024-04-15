@@ -116,7 +116,7 @@ class FollowerState(State):
         success, response = client.forward_add_log_request(node_id=self.consensus_service.current_leader,
                                                            log=consensus_pb2.Log(logTerm=log['log_term'],
                                                                                  command=log['command']))
-        return success
+        return success, response
 
     def run(self):
         self.reset_timer()
