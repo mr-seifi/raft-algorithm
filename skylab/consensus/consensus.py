@@ -126,26 +126,28 @@ class Consensus:
                     continue
 
             elif data_type == "add_log_request":
-                success = self.request(log=item['log'])
+                success, response = self.request(log=item['log'])
                 if not success:
                     logging.error('[Exception|start]: Failed to run the log command')
                     continue
                 message_broker = MessageBroker(channel_name=MessageBroker.Channels.CONSENSUS_TO_RPC)
                 produced_successfully = message_broker.produce(data_type=data_type, data={'_id': item['_id'],
-                                                                                          'success': success})
+                                                                                          'success': success,
+                                                                                          'response': response})
                 if not produced_successfully:
                     logging.error('[Exception|produce_by_consensus_to_request_rpc]: Failed to produce to request rpc')
                     continue
 
             elif data_type == "node_request":
-                success = self.request(log={'log_term': self.current_term,
+                success, response = self.request(log={'log_term': self.current_term,
                                             'command': item['command']})
                 if not success:
                     logging.error('[Exception|start]: Failed to run the log command')
                     continue
                 message_broker = MessageBroker(channel_name=MessageBroker.Channels.CONSENSUS_TO_REQUEST)
                 produced_successfully = message_broker.produce(data_type=data_type, data={'_id': item['_id'],
-                                                                                          'success': success})
+                                                                                          'success': success,
+                                                                                          'response': response})
                 if not produced_successfully:
                     logging.error('[Exception|produce_by_consensus_to_request_rpc]: Failed to produce to request rpc')
                     continue

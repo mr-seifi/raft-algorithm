@@ -106,4 +106,6 @@ class Client:
                                  request='NodeRequest',
                                  arguments={'command': command})
 
+        logging.info(f"NODE REQUEST LOGGING: {response}")
+
         return response.success, response.response

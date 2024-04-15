@@ -30,7 +30,7 @@ class State:
                            last_log_index: int, last_log_term: int) -> (int, bool):
         ...
 
-    def handle_request(self, log):
+    def handle_request(self, log) -> (bool, str):
         ...
 
     def run(self):
@@ -111,11 +111,11 @@ class FollowerState(State):
 
         return self.consensus_service.current_term, False
 
-    def handle_request(self, log: dict) -> bool:
+    def handle_request(self, log: dict) -> (bool, str):
         client = Client()
-        success = client.forward_add_log_request(node_id=self.consensus_service.current_leader,
-                                                 log=consensus_pb2.Log(logTerm=log['log_term'],
-                                                                       command=log['command']))
+        success, response = client.forward_add_log_request(node_id=self.consensus_service.current_leader,
+                                                           log=consensus_pb2.Log(logTerm=log['log_term'],
+                                                                                 command=log['command']))
         return success
 
     def run(self):
@@ -178,8 +178,8 @@ class CandidateState(State):
 
         return self.consensus_service.current_term, False
 
-    def handle_request(self, log) -> bool:
-        return True
+    def handle_request(self, log) -> (bool, str):
+        return True, ""
 
     def run(self):  # Start Election
         self.consensus_service.current_term += 1
@@ -259,13 +259,13 @@ class LeaderState(State):
 
         return self.consensus_service.current_term, False
 
-    def handle_request(self, log: dict) -> bool:
+    def handle_request(self, log: dict) -> (bool, str):
         log = Log(term=log['log_term'], command=log['command'])
         self.consensus_service.log.append(log)
 
         self.consensus_service.last_applied += 1
         log.exec()
-        return True
+        return True, ""
 
     def run(self):
         self.consensus_service.reset_timer()
