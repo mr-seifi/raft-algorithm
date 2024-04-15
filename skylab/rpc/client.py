@@ -1,3 +1,5 @@
+import logging
+
 import grpc
 from skylab.rpc.config import consensus_pb2, consensus_pb2_grpc
 from skylab.app.config import Config
@@ -94,6 +96,7 @@ class Client:
         return response.success, response.response
 
     def forward_add_log_request(self, node_id: int, log: consensus_pb2.Log) -> (int, bool):
+        logging.info(f"Forwarding the message to leader: {self.node_id_to_url.get(node_id, 1)}")
         return self.add_log_request(base_url=self.node_id_to_url.get(node_id, 1), log=log)
 
     def node_request(self, base_url: str, command: str) -> (int, bool):
