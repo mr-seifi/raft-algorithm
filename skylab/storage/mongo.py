@@ -5,9 +5,9 @@ from pymongo import MongoClient
 class MongoService:
     _instance = None
 
-    def __init__(self):
-        self._uri = Config.mongo_uri()
-        self._db = Config.mongo_database()
+    def __init__(self, uri=None, db=None):
+        self._uri = uri or Config.mongo_uri()
+        self._db = db or Config.mongo_database()
         self.client = MongoClient(self._uri)
         self.db = self.client[self._db]
 
