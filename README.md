@@ -1,6 +1,6 @@
 # Raft Consensus Algorithm Implementation
 ![](https://web.stanford.edu/~ouster/cgi-bin/papers/raft-atc14.pdf)
-![arXiv](https://img.shields.io/badge/2404.19756-message?style=flat&label=arXiv&color=bb1111&link=https%3A%2F%2Farxiv.org%2Fabs%2F2404.19756)
+[![arXiv](https://img.shields.io/badge/raft.atc14-message?label=Stanford&color=dd1111&link=https%3A%2F%2Fweb.stanford.edu%2F~ouster%2Fcgi-bin%2Fpapers%2Fraft-atc14.pdf)](https://web.stanford.edu/~ouster/cgi-bin/papers/raft-atc14.pdf)
 
 ## Description
 
